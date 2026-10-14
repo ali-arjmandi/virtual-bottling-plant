@@ -89,7 +89,7 @@ Stands in for the machines, sensors and actuators of Line 1. It produces realist
 | --- | --- |
 | SIM-60 | Fixed seed gives an identical run (all randomness from one seeded generator per subsystem) |
 | SIM-61 | Time speed 1×, 10×, 60×, plus pause |
-| SIM-62 | Modbus map loaded from `contracts/modbus/sim-io.yaml` |
+| SIM-62 | Modbus map loaded from `contracts/modbus/sim-io.yaml`. Each unit refreshes its `{EQ}_Heartbeat` register on every reply (v1.1, added in P2) |
 | SIM-63 | REST + WebSocket API as in [contracts.md §4](contracts.md) |
 | SIM-64 | Scenario files (`sim/scenarios/*.yaml`) schedule faults at sim times. `demo.yaml` drives the video |
 | SIM-65 | Headless mode for long runs: writes a summary (counts, stops, OEE estimate) for tuning |
@@ -133,6 +133,6 @@ sim/
 
 ## Phase 1 findings
 
-- **One mix tank only just feeds the line.** With the plan's 20 min fill + 15 min mix (+ ~20 min transfer), T-101 supplies ~90 L/min against ~110 L/min demand. Dosing is now ~6.5 min and transfer 400 L/min, so the process has ~30% spare capacity. A second mix tank (T-102) would be the real-plant answer; decide before Phase 2 if the PLC should handle two.
+- **One mix tank only just feeds the line.** With the plan's 20 min fill + 15 min mix (+ ~20 min transfer), T-101 supplies ~90 L/min against ~110 L/min demand. Dosing is now ~6.5 min and transfer 400 L/min, so the process has ~30% spare capacity. A second mix tank (T-102) would be the real-plant answer. Decided in P2: one tank (PLC-17); T-102 is a README "next step".
 - **HTST start-up diverts without feedforward.** A flow step from recirculation to transfer drops the outlet below 83 °C for minutes with a plain PI. The PLC (P2) needs flow feedforward on the steam valve.
 - **Time acceleration (R1):** headless runs go as fast as possible (24 h in ~50 s). Live ×60 still needs a decision in P5.

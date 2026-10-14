@@ -19,6 +19,7 @@ The sim is a Modbus TCP server on port 5020 (non-root container); the PLC is the
 - **Scaling:** integers with a fixed scale in the YAML, e.g. temperature ×10 (`852` = 85.2 °C), Brix ×100, weight ×10 g.
 - **32-bit values** (counters, sim time) use two registers, high word first.
 - **Sim clock:** unit 9 IR 0–1 hold sim time in ms (mod 2³²). The PLC uses it as its time base (see [l1-plc.md](l1-plc.md)).
+- **Heartbeat (v1.1):** every unit has an `{EQ}_Heartbeat` input register, a free-running comms counter (+1 per 100 ms of real time, wraps at 65536) refreshed on each reply. It keeps counting while the sim is paused. The PLC treats a frozen heartbeat as comms loss (PLC-15).
 - **Quality data:** Q-701 reports per-nozzle subgroup stats (mean, range, n=5, sequence no.) instead of single bottles, like a real checkweigher.
 
 Example rows (full list in YAML):
@@ -33,7 +34,7 @@ Example rows (full list in YAML):
 
 ## 2. PLC ↔ edge bridge (Modbus TCP, `contracts/modbus/plc-io.yaml`)
 
-The PLC's built-in Modbus server is read and written only by the edge bridge. Logic data uses OpenPLC memory words (`%MW`, holding 1024+) and double words (`%MD`, holding 2048+).
+The PLC's built-in Modbus server is read and written only by the edge bridge. Logic data uses OpenPLC memory words (`%MW`, holding 1024+) and double words (`%MD`, holding 2048+, high word first). Status words are signed 16-bit scaled integers. Every address, enum number, alarm id and range is in `plc-io.yaml`; the PLC side of it is generated from that file.
 
 | Range | Direction | Content |
 | --- | --- | --- |
@@ -48,7 +49,7 @@ The PLC's built-in Modbus server is read and written only by the edge bridge. Lo
 | --- | --- | --- |
 | 1 | Bridge | Writes recipe values, `RecipeId`, `RecipeVersion` |
 | 2 | Bridge | Sets `Recipe_Req = 1` |
-| 3 | PLC | Checks ranges and that the line is not in Execute. Sets `Recipe_Ack = 1` or `Recipe_Nak = <code>` |
+| 3 | PLC | Checks ranges and that the line (F-401) is Stopped, Idle, Aborted or Complete. Sets `Recipe_Ack = 1` or `Recipe_Nak = <code>` (1 in Execute, 2 Brix, 3 concentrate ratio, 4 fill weight, 5 line speed, 6 cap torque, 7 unknown product) |
 | 4 | Bridge | Publishes the result to the UNS, clears `Recipe_Req` |
 | 5 | PLC | Clears Ack/Nak when Req goes to 0 |
 
@@ -56,7 +57,7 @@ Timeout: 10 s without Ack/Nak counts as a failure.
 
 ### Command handshake
 
-Commands are one-shot: the bridge writes the command word, and the PLC executes it and writes it back as 0. The stop reason is written to the PackML `Admin.StopReason` of that machine.
+Commands are one-shot: the bridge writes the command word, and the PLC executes it and writes it back as 0. The stop reason is written to the PackML `Admin.StopReason` of that machine (≥ 100: operator reason codes; 1–99 are set by the PLC itself and equal the alarm id that held the machine). `AlarmAck` takes an alarm id, or 65535 (−1) for all.
 
 ## 3. UNS (MQTT, `contracts/uns/topics.yaml`)
 
@@ -112,7 +113,7 @@ Base `http://sim:8000`. Used only by the Instructor Station and the FAT suite.
 | POST | `/sensors/{tag}/override` | `{mode: "stuck" \| "disconnect" \| "noise", value?}` |
 | DELETE | `/sensors/{tag}/override` | Back to normal |
 | POST | `/clock` | `{speed?: 1 \| 10 \| 60, paused?: bool}` |
-| POST | `/reset` | `{seed: 42}` (sim time back to 0) |
+| POST | `/reset` | `{seed: 42, randomFaults?: true}` (sim time back to 0). `randomFaults: false` leaves only injected faults (FAT suite, quiet demos) |
 | POST | `/scenarios/{name}/run` | Plays `sim/scenarios/{name}.yaml`, e.g. `demo` |
 | WS | `/ws` | `{kind: "state"}` at 2 Hz plus `{kind: "event"}` as they happen |
 
@@ -130,4 +131,4 @@ Both sides accept repeated calls with the same `orderNo`/`messageId` without cre
 
 - Every schema has `schemaVersion`. A breaking change means a new major version and an ADR.
 - `packages/contracts` is generated from `contracts/` (`pnpm gen:contracts`). CI fails if it is out of date.
-- `sim` loads `sim-io.yaml` at startup. A FAT test checks that the PLC IO map matches it.
+- `sim` loads `sim-io.yaml` at startup. The PLC's IO and bridge maps are generated from `sim-io.yaml` and `plc-io.yaml` (`plc/scripts/gen_plc_io.py --check` in CI), and a FAT test recomputes every PLC address independently.
