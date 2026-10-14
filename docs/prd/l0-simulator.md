@@ -1,6 +1,6 @@
 # L0 Line Simulator
 
-Part of the [PRD](../prd.md). Folder: `sim/`. Language: Python 3.12, SimPy, pymodbus, FastAPI.
+Part of the [PRD](../prd.md). Folder: `sim/`. Language: Python 3.12, SimPy, FastAPI, own Modbus TCP server (pymodbus only as test client). Status: **built in Phase 1**.
 
 ## Purpose
 
@@ -10,15 +10,15 @@ Stands in for the machines, sensors and actuators of Line 1. It produces realist
 
 | Tag | Equipment | Nominal behaviour | Key signals |
 | --- | --- | --- | --- |
-| T-101 | Mix tank | 5,000 L batch; fill 20 min, mix 15 min; Brix 11.5 ± 0.3 | Level, Brix, agitator speed, valves |
-| P-201 | HTST pasteuriser | SP 85 °C, hold 30 s; < 83 °C needs divert | In/out temp, flow, divert valve |
+| T-101 | Mix tank | 5,000 L batch; dosing ≈ 6.5 min (600 + 120 + 60 L/min), mix 15 min; Brix 11.5 ± 0.3 | Level, Brix, agitator speed, valves |
+| P-201 | HTST pasteuriser | SP 85 °C, hold 30 s; < 83 °C needs divert; 400 L/min transfer | In/out temp, flow, steam pressure, divert valve |
 | T-301 | Buffer tank | 3,000 L | Level |
 | F-401 | Filler | 12 nozzles, 120 bpm, 1,005 g ± 3 | Count, speed, nozzle weight, run feedback |
 | C-501 | Capper | Torque 2.2 ± 0.15 Nm | Torque, jam, cap hopper level |
 | L-601 | Labeler | Roll lasts ~4,000 bottles | Roll status, label error |
 | Q-701 | Checkweigher | Reject < 995 g | Per-nozzle subgroup stats, reject count |
 | K-801 | Case packer | 6 bottles per case, 20 cases/min | Case count, jam |
-| CV | Accumulation conveyors | ~150 bottles between each packaging machine | Fill level, full/empty |
+| CV | Accumulation conveyors | CV1 = 12 bottles (filler/capper monoblock transfer); CV2–CV4 ~150 bottles | Fill level, full |
 
 ## Requirements
 
@@ -46,13 +46,14 @@ Stands in for the machines, sensors and actuators of Line 1. It produces realist
 | SIM-20 | Micro-stops: Poisson process, 10 to 60 s |
 | SIM-21 | Breakdowns: Weibull time between failures, lognormal repair time of 5 to 45 min |
 | SIM-22 | Material shortages: label roll, cap hopper |
-| SIM-23 | Parameters per machine in `sim/config/faults.yaml` (start values below) |
+| SIM-23 | Parameters per machine in `sim/config/faults.yaml` (values after Phase 1 tuning below) |
 
 | Machine | Fault | Frequency | Duration |
 | --- | --- | --- | --- |
-| C-501 | Cap jam | ~every 8 min | 10–60 s |
+| C-501 | Cap jam | ~every 5 min running | 10–60 s |
+| C-501, L-601, K-801 | Breakdown | Weibull, scale 1.7–2.3 running days | lognormal, median 15 min |
 | F-401 | Nozzle leak | ~every 3 days | 20–40 min |
-| L-601 | Roll empty | every ~4,000 bottles | 2–5 min |
+| L-601 | Roll empty | every 4,000 bottles | 1.5–3.5 min |
 | L-601 | Label glue | ~every 20 min | 15–90 s |
 | K-801 | Case jam | ~every 40 min | 1–5 min |
 | P-201 | Steam pressure drop | ~weekly | 10–30 min, causes divert |
@@ -61,7 +62,7 @@ Stands in for the machines, sensors and actuators of Line 1. It produces realist
 
 | ID | Requirement |
 | --- | --- |
-| SIM-30 | Fill weight per nozzle is normal (σ ≈ 1 g) |
+| SIM-30 | Fill weight per nozzle is normal (σ ≈ 1 g); the first 12 bottles after a restart are underfilled (startup rejects) |
 | SIM-31 | One nozzle drifts slowly (~0.05 g/h) until SPC catches it. It can also be triggered from the API |
 | SIM-32 | Some batches come out of Brix spec (rate set in config) |
 
@@ -80,6 +81,7 @@ Stands in for the machines, sensors and actuators of Line 1. It produces realist
 | SIM-50 | Shift calendar and planned breaks in `sim/config/shifts.yaml` |
 | SIM-51 | Operator response time to a stop depends on the shift (evening shift a bit slower) |
 | SIM-52 | Product change triggers a 45-minute CIP |
+| SIM-53 | 10-minute line stop at the 14:00 shift handover |
 
 ### Control and repeatability
 
@@ -96,30 +98,41 @@ Stands in for the machines, sensors and actuators of Line 1. It produces realist
 
 ```
 sim/
-├── pyproject.toml
-├── Dockerfile
-├── config/                 # faults.yaml, shifts.yaml, sensors.yaml, products.yaml
-├── scenarios/              # demo.yaml, ...
+├── pyproject.toml, uv.lock, Dockerfile
+├── config/                 # line, faults, shifts, sensors, products (.yaml)
+├── scenarios/              # demo.yaml
 ├── src/sim/
-│   ├── main.py             # wires everything, starts loop + servers
-│   ├── clock.py            # sim time, speed, pause
-│   ├── rng.py              # seeded generators per subsystem
-│   ├── physics/            # tank.py, pasteurizer.py, mixing.py
-│   ├── machines/           # filler.py, capper.py, labeler.py, checkweigher.py, case_packer.py
-│   ├── flow/               # conveyor.py, line.py
-│   ├── faults/             # distributions.py, fault_scheduler.py, fault_catalog.py
-│   ├── sensors/            # sensor.py, sensor_faults.py
+│   ├── main.py             # serve mode: real-time loop + Modbus + API
+│   ├── runtime.py          # one sim instance and its controls
+│   ├── plant.py            # builds Line 1, tick order
+│   ├── clock.py, rng.py, distributions.py, event_log.py, config_models.py
+│   ├── physics/            # tank.py, heat_exchanger.py
+│   ├── process/            # mix_tank.py, pasteurizer.py, buffer_tank.py, cip_skid.py
+│   ├── flow/               # conveyor.py
+│   ├── machines/           # base_machine.py, machine_status.py, filler.py, capper.py,
+│   │                       # cap_hopper.py, labeler.py, checkweigher.py, case_packer.py
+│   ├── quality/            # fill_weight.py, concentrate_supply.py
+│   ├── faults/             # fault_catalog.py, fault_injector.py, fault_scheduler.py, fault_target.py
+│   ├── sensors/            # sensor.py, sensor_bank.py
 │   ├── operations/         # shift_calendar.py, operator.py
-│   ├── io/                 # register_map.py, modbus_server.py
-│   ├── api/                # rest_routes.py, ws_stream.py
+│   ├── io/                 # register_map.py, register_image.py, plant_bindings.py,
+│   │                       # modbus_pdu.py, modbus_server.py
+│   ├── api/                # app.py, rest_routes.py, ws_stream.py, schemas.py, state_snapshot.py
 │   └── scenarios/          # scenario_runner.py
+├── harness/                # Phase 1 only, not in the image: stub PLC, headless run, summary
 └── tests/                  # mirrors src/sim/
 ```
 
 ## Acceptance criteria
 
-- [ ] A 24 h headless run with the reference fault set gives OEE of 55–70% (in P1, a minimal Python PLC stub in `sim/tests/` drives the run; the real sim has no control logic)
-- [ ] The downtime Pareto from that run has one clear top reason (expected: C-501 jams)
-- [ ] Two runs with the same seed give byte-identical event logs
-- [ ] Stopping C-501 blocks F-401 once the conveyor is full, and starves L-601 onwards
-- [ ] Unit tests cover physics models and fault distributions (mean within 5% of config)
+- [x] A 24 h headless run with the reference fault set gives OEE of 55–70% (65–69% over 5 seeds). In P1 a stub PLC in `sim/harness/` drives the run; the sim itself has no control logic
+- [x] The downtime Pareto from that run has one clear top reason: C-501 jams, ≥ 3× the next
+- [x] Two runs with the same seed give byte-identical event logs
+- [x] Stopping C-501 blocks F-401 once the monoblock transfer is full, and starves L-601 onwards at once (downstream runs faster, so its conveyors are nearly empty). A K-801 stop is absorbed until CV4…CV1 fill
+- [x] Unit tests cover physics models and fault distributions (mean within 5% of config)
+
+## Phase 1 findings
+
+- **One mix tank only just feeds the line.** With the plan's 20 min fill + 15 min mix (+ ~20 min transfer), T-101 supplies ~90 L/min against ~110 L/min demand. Dosing is now ~6.5 min and transfer 400 L/min, so the process has ~30% spare capacity. A second mix tank (T-102) would be the real-plant answer; decide before Phase 2 if the PLC should handle two.
+- **HTST start-up diverts without feedforward.** A flow step from recirculation to transfer drops the outlet below 83 °C for minutes with a plain PI. The PLC (P2) needs flow feedforward on the steam valve.
+- **Time acceleration (R1):** headless runs go as fast as possible (24 h in ~50 s). Live ×60 still needs a decision in P5.

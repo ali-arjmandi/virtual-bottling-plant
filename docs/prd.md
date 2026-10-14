@@ -119,7 +119,7 @@ About 10 weeks at 15 to 20 h/week. Each phase ends with something you can demo.
 
 | Phase | Weeks | Delivers | Exit criteria |
 | --- | --- | --- | --- |
-| P1 Simulator | 1–2 | `sim/`, Modbus server, fault API | 24 h headless run, line behaviour plausible |
+| P1 Simulator | 1–2 | `sim/`, Modbus server, fault API | 24 h headless run, line behaviour plausible (**done**) |
 | P2 PLC | 3–4 | `plc/`, PackML, PID, alarms, FAT suite | FAT green; line runs under PLC control |
 | P3 UNS | 5 | Edge bridge, broker, contracts | Sparkplug data visible in an MQTT client |
 | P4 SCADA/HMI | 6 | Ignition UDTs, 5 screens, historian | **Apply for PLC/HMI/SCADA roles** |
@@ -130,7 +130,7 @@ About 10 weeks at 15 to 20 h/week. Each phase ends with something you can demo.
 
 | ID | Risk / question | Plan |
 | --- | --- | --- |
-| R1 | Time acceleration (×60) breaks PLC timers and PID, which run in real time | PLC timers use the sim clock register (see [l1-plc.md](prd/l1-plc.md)). Live chain is validated up to ×10. For 30-day history, decide in P1 between running ×60 with coarser control or a seed generator that writes synthetic history (flagged as such) |
+| R1 | Time acceleration (×60) breaks PLC timers and PID, which run in real time | PLC timers use the sim clock register (see [l1-plc.md](prd/l1-plc.md)). Live chain is validated up to ×10. P1 result: the sim alone runs 24 h in ~50 s headless, so the history question is now about the PLC and MES, not the sim. Decide in P5 between ×60 live with coarser control or a seed generator that writes synthetic history (flagged as such) |
 | R2 | Modbus polling cannot keep up with per-bottle data at high speed | The checkweigher reports per-nozzle subgroup stats, not single bottles ([contracts.md](prd/contracts.md)) |
 | R3 | Ignition Maker Edition limits (non-commercial, no Vision) | Use Perspective only. Document the licence in the README |
 | R4 | OpenPLC Runtime accepts one `.st` file | Keep modular sources, concatenate in `plc/scripts/build.sh` |

@@ -4,7 +4,7 @@ Part of the [PRD](../prd.md). Every interface between layers. The machine-readab
 
 ## 1. Sim ↔ PLC (Modbus TCP, `contracts/modbus/sim-io.yaml`)
 
-The sim is a Modbus TCP server; the PLC is the client (an OpenPLC Slave Device).
+The sim is a Modbus TCP server on port 5020 (non-root container); the PLC is the client (an OpenPLC Slave Device). A unit whose sensor is "disconnected" gets no reply, so the PLC sees a timeout.
 
 - **One unit ID per equipment.** Unit ID = the tag's hundreds digit: T-101 → 1, P-201 → 2, T-301 → 3, F-401 → 4, C-501 → 5, L-601 → 6, Q-701 → 7, K-801 → 8. Conveyors are unit 9.
 - **Direction by register type:**
@@ -104,14 +104,17 @@ Base `http://sim:8000`. Used only by the Instructor Station and the FAT suite.
 
 | Method | Path | Body / notes |
 | --- | --- | --- |
-| GET | `/state` | Full truth snapshot (true and reported sensor values) |
-| POST | `/faults` | `{machine: "C501", type: "jam", durationS?: 30}` |
+| GET | `/health` | Liveness for compose |
+| GET | `/state` | Full truth snapshot (true and reported sensor values, active faults) |
+| GET | `/events?limit=100` | Recent sim events |
+| POST | `/faults` | `{machine: "C501", type: "jam", durationS?: 30, params?: {}}`. Types come from `sim/config/faults.yaml`; `F401`/`drift` takes `params: {nozzle, rateGPerMin}` |
 | DELETE | `/faults/{id}` | Clear an active fault |
 | POST | `/sensors/{tag}/override` | `{mode: "stuck" \| "disconnect" \| "noise", value?}` |
-| POST | `/clock` | `{speed: 1 \| 10 \| 60, paused?: bool}` |
-| POST | `/reset` | `{seed: 42}` |
-| POST | `/scenarios/{name}/run` | e.g. `demo` |
-| WS | `/ws` | State stream at 2 Hz, plus fault and event log |
+| DELETE | `/sensors/{tag}/override` | Back to normal |
+| POST | `/clock` | `{speed?: 1 \| 10 \| 60, paused?: bool}` |
+| POST | `/reset` | `{seed: 42}` (sim time back to 0) |
+| POST | `/scenarios/{name}/run` | Plays `sim/scenarios/{name}.yaml`, e.g. `demo` |
+| WS | `/ws` | `{kind: "state"}` at 2 Hz plus `{kind: "event"}` as they happen |
 
 ## 5. ERP ↔ MES (REST, ISA-95 B2MML-style JSON)
 

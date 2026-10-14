@@ -24,7 +24,7 @@ All control logic for Line 1: PackML state machines, interlocks, pasteuriser PID
 | --- | --- |
 | PLC-10 | Suspended = starved (no input) or blocked (output full). Held = internal fault (jam, empty roll) |
 | PLC-11 | Interlock: F-401 cannot start unless `LT301_Level` > 20%. P-201 cannot forward-flow below 83 °C |
-| PLC-12 | PID on `TT202_OutTemp` → steam valve, SP 85 °C. Divert valve opens below 83 °C and closes after 30 s stable above 85 °C |
+| PLC-12 | PID on `TT202_OutTemp` → steam valve, SP 85 °C, with flow feedforward from `FT201_Flow` (without it, every transfer start diverts for minutes; see Phase 1 findings in [l0-simulator.md](l0-simulator.md)). Divert valve opens below 83 °C and closes after 30 s stable above 85 °C |
 | PLC-13 | PackML `Admin.StopReason` is set by the HMI command, or automatically for known causes |
 | PLC-14 | Timers and the PID dt use the sim clock register, not wall-clock time, so logic holds under time acceleration (risk R1) |
 | PLC-15 | Loss of communication to a sim unit raises a comms alarm and puts that machine in Held |
