@@ -1,0 +1,172 @@
+# Sim ↔ PLC register map (Modbus TCP). Source of truth: see docs/prd/contracts.md §1.
+#
+# The simulator is the Modbus server, the PLC is the client.
+# Unit ID = hundreds digit of the equipment tag (T-101 → 1 ... K-801 → 8), line/conveyors → 9.
+#
+# type:  di = discrete input (sim → PLC)   ir = input register (sim → PLC)
+#        coil (PLC → sim)                  hr = holding register (PLC → sim)
+# scale: engineering value × scale = raw integer. words: 2 = 32-bit, high word first.
+version: 1
+
+units:
+  1:
+    equipment: T101
+    description: Mix tank
+    signals:
+      - {name: LT101_Level,        type: ir,   addr: 0,  scale: 10,  unit: "%"}
+      - {name: AT101_Brix,         type: ir,   addr: 1,  scale: 100, unit: "°Bx"}
+      - {name: FT101_WaterFlow,    type: ir,   addr: 2,  scale: 1,   unit: "L/min"}
+      - {name: FT102_ConcFlow,     type: ir,   addr: 3,  scale: 1,   unit: "L/min"}
+      - {name: FT103_SugarFlow,    type: ir,   addr: 4,  scale: 1,   unit: "L/min"}
+      - {name: ST101_AgitatorRpm,  type: ir,   addr: 5,  scale: 1,   unit: "rpm"}
+      - {name: T101_ConcLotNo,     type: ir,   addr: 6,  scale: 1,   words: 2, description: Barcode scanner on the concentrate feed}
+      - {name: LSL101_Empty,       type: di,   addr: 0}
+      - {name: M101_Running,       type: di,   addr: 1}
+      - {name: T101_CipDone,       type: di,   addr: 2,  description: Done signal from the CIP skid}
+      - {name: XV101_Water,        type: coil, addr: 0}
+      - {name: XV102_Conc,         type: coil, addr: 1}
+      - {name: XV103_Sugar,        type: coil, addr: 2}
+      - {name: M101_Agitator,      type: coil, addr: 3}
+      - {name: P101_TransferPump,  type: coil, addr: 4}
+      - {name: XV109_Drain,        type: coil, addr: 5}
+      - {name: T101_CipRun,        type: coil, addr: 6}
+      - {name: T101_ConcSelect,    type: hr,   addr: 0,  scale: 1,   description: "1 = orange, 2 = apple"}
+
+  2:
+    equipment: P201
+    description: HTST pasteuriser
+    signals:
+      - {name: TT201_InTemp,       type: ir,   addr: 0,  scale: 10,  unit: "°C"}
+      - {name: TT202_OutTemp,      type: ir,   addr: 1,  scale: 10,  unit: "°C"}
+      - {name: FT201_Flow,         type: ir,   addr: 2,  scale: 1,   unit: "L/min"}
+      - {name: PT201_SteamPressure, type: ir,  addr: 3,  scale: 100, unit: "bar"}
+      - {name: ZS203_DivertOpen,   type: di,   addr: 0}
+      - {name: XV203_Divert,       type: coil, addr: 0,  description: "1 = divert back to T-101"}
+      - {name: TCV201_SteamValve,  type: hr,   addr: 0,  scale: 10,  unit: "%"}
+
+  3:
+    equipment: T301
+    description: Buffer tank
+    signals:
+      - {name: LT301_Level,        type: ir,   addr: 0,  scale: 10,  unit: "%"}
+      - {name: LSL301_Low,         type: di,   addr: 0,  description: Filler suction low level}
+      - {name: XV309_Drain,        type: coil, addr: 0}
+
+  4:
+    equipment: F401
+    description: Filler (12 nozzles)
+    signals:
+      - {name: F401_Speed,         type: ir,   addr: 0,  scale: 1,   unit: "bpm"}
+      - {name: F401_Count,         type: ir,   addr: 1,  scale: 1,   words: 2}
+      - {name: F401_Running,       type: di,   addr: 0}
+      - {name: F401_NozzleLeak,    type: di,   addr: 1}
+      - {name: F401_Run,           type: coil, addr: 0}
+      - {name: F401_SpeedSP,       type: hr,   addr: 0,  scale: 1,   unit: "bpm"}
+      - {name: F401_FillTargetG,   type: hr,   addr: 1,  scale: 10,  unit: "g"}
+
+  5:
+    equipment: C501
+    description: Capper
+    signals:
+      - {name: C501_Speed,         type: ir,   addr: 0,  scale: 1,   unit: "bpm"}
+      - {name: C501_Count,         type: ir,   addr: 1,  scale: 1,   words: 2}
+      - {name: C501_Torque,        type: ir,   addr: 3,  scale: 100, unit: "Nm"}
+      - {name: LT502_CapHopper,    type: ir,   addr: 4,  scale: 10,  unit: "%"}
+      - {name: C501_Running,       type: di,   addr: 0}
+      - {name: C501_Jam,           type: di,   addr: 1}
+      - {name: C501_Breakdown,     type: di,   addr: 2}
+      - {name: LSL502_CapsEmpty,   type: di,   addr: 3}
+      - {name: C501_Run,           type: coil, addr: 0}
+      - {name: C501_SpeedSP,       type: hr,   addr: 0,  scale: 1,   unit: "bpm"}
+
+  6:
+    equipment: L601
+    description: Labeler
+    signals:
+      - {name: L601_Speed,         type: ir,   addr: 0,  scale: 1,   unit: "bpm"}
+      - {name: L601_Count,         type: ir,   addr: 1,  scale: 1,   words: 2}
+      - {name: L601_RollRemaining, type: ir,   addr: 3,  scale: 1,   unit: labels}
+      - {name: L601_Running,       type: di,   addr: 0}
+      - {name: L601_RollEmpty,     type: di,   addr: 1}
+      - {name: L601_LabelError,    type: di,   addr: 2}
+      - {name: L601_Breakdown,     type: di,   addr: 3}
+      - {name: L601_Run,           type: coil, addr: 0}
+      - {name: L601_SpeedSP,       type: hr,   addr: 0,  scale: 1,   unit: "bpm"}
+
+  7:
+    equipment: Q701
+    description: Checkweigher. Reports per-nozzle subgroups (n = 5) instead of single bottles.
+    signals:
+      - {name: Q701_Speed,         type: ir,   addr: 0,  scale: 1,   unit: "bpm"}
+      - {name: Q701_Count,         type: ir,   addr: 1,  scale: 1,   words: 2}
+      - {name: Q701_RejectCount,   type: ir,   addr: 3,  scale: 1,   words: 2}
+      - {name: WT701_LastWeight,   type: ir,   addr: 5,  scale: 10,  unit: "g"}
+      - {name: Q701_N01_Seq,       type: ir,   addr: 10}
+      - {name: Q701_N01_Mean,      type: ir,   addr: 11, scale: 10,  unit: "g"}
+      - {name: Q701_N01_Range,     type: ir,   addr: 12, scale: 10,  unit: "g"}
+      - {name: Q701_N02_Seq,       type: ir,   addr: 13}
+      - {name: Q701_N02_Mean,      type: ir,   addr: 14, scale: 10,  unit: "g"}
+      - {name: Q701_N02_Range,     type: ir,   addr: 15, scale: 10,  unit: "g"}
+      - {name: Q701_N03_Seq,       type: ir,   addr: 16}
+      - {name: Q701_N03_Mean,      type: ir,   addr: 17, scale: 10,  unit: "g"}
+      - {name: Q701_N03_Range,     type: ir,   addr: 18, scale: 10,  unit: "g"}
+      - {name: Q701_N04_Seq,       type: ir,   addr: 19}
+      - {name: Q701_N04_Mean,      type: ir,   addr: 20, scale: 10,  unit: "g"}
+      - {name: Q701_N04_Range,     type: ir,   addr: 21, scale: 10,  unit: "g"}
+      - {name: Q701_N05_Seq,       type: ir,   addr: 22}
+      - {name: Q701_N05_Mean,      type: ir,   addr: 23, scale: 10,  unit: "g"}
+      - {name: Q701_N05_Range,     type: ir,   addr: 24, scale: 10,  unit: "g"}
+      - {name: Q701_N06_Seq,       type: ir,   addr: 25}
+      - {name: Q701_N06_Mean,      type: ir,   addr: 26, scale: 10,  unit: "g"}
+      - {name: Q701_N06_Range,     type: ir,   addr: 27, scale: 10,  unit: "g"}
+      - {name: Q701_N07_Seq,       type: ir,   addr: 28}
+      - {name: Q701_N07_Mean,      type: ir,   addr: 29, scale: 10,  unit: "g"}
+      - {name: Q701_N07_Range,     type: ir,   addr: 30, scale: 10,  unit: "g"}
+      - {name: Q701_N08_Seq,       type: ir,   addr: 31}
+      - {name: Q701_N08_Mean,      type: ir,   addr: 32, scale: 10,  unit: "g"}
+      - {name: Q701_N08_Range,     type: ir,   addr: 33, scale: 10,  unit: "g"}
+      - {name: Q701_N09_Seq,       type: ir,   addr: 34}
+      - {name: Q701_N09_Mean,      type: ir,   addr: 35, scale: 10,  unit: "g"}
+      - {name: Q701_N09_Range,     type: ir,   addr: 36, scale: 10,  unit: "g"}
+      - {name: Q701_N10_Seq,       type: ir,   addr: 37}
+      - {name: Q701_N10_Mean,      type: ir,   addr: 38, scale: 10,  unit: "g"}
+      - {name: Q701_N10_Range,     type: ir,   addr: 39, scale: 10,  unit: "g"}
+      - {name: Q701_N11_Seq,       type: ir,   addr: 40}
+      - {name: Q701_N11_Mean,      type: ir,   addr: 41, scale: 10,  unit: "g"}
+      - {name: Q701_N11_Range,     type: ir,   addr: 42, scale: 10,  unit: "g"}
+      - {name: Q701_N12_Seq,       type: ir,   addr: 43}
+      - {name: Q701_N12_Mean,      type: ir,   addr: 44, scale: 10,  unit: "g"}
+      - {name: Q701_N12_Range,     type: ir,   addr: 45, scale: 10,  unit: "g"}
+      - {name: Q701_Running,       type: di,   addr: 0}
+      - {name: Q701_Run,           type: coil, addr: 0}
+      - {name: Q701_SpeedSP,       type: hr,   addr: 0,  scale: 1,   unit: "bpm"}
+      - {name: Q701_RejectLimitG,  type: hr,   addr: 1,  scale: 10,  unit: "g"}
+
+  8:
+    equipment: K801
+    description: Case packer (6 bottles per case)
+    signals:
+      - {name: K801_Speed,         type: ir,   addr: 0,  scale: 1,   unit: "cases/min"}
+      - {name: K801_CaseCount,     type: ir,   addr: 1,  scale: 1,   words: 2}
+      - {name: K801_Running,       type: di,   addr: 0}
+      - {name: K801_Jam,           type: di,   addr: 1}
+      - {name: K801_Breakdown,     type: di,   addr: 2}
+      - {name: K801_Run,           type: coil, addr: 0}
+      - {name: K801_SpeedSP,       type: hr,   addr: 0,  scale: 1,   unit: "cases/min"}
+
+  9:
+    equipment: LINE
+    description: Sim clock, accumulation conveyors and the local operator panel
+    signals:
+      - {name: SIM_TimeMs,         type: ir,   addr: 0,  scale: 1,   words: 2, unit: ms, description: Sim time mod 2^32, PLC time base}
+      - {name: CV1_Fill,           type: ir,   addr: 2,  scale: 1,   unit: bottles, description: F-401 → C-501}
+      - {name: CV2_Fill,           type: ir,   addr: 3,  scale: 1,   unit: bottles, description: C-501 → L-601}
+      - {name: CV3_Fill,           type: ir,   addr: 4,  scale: 1,   unit: bottles, description: L-601 → Q-701}
+      - {name: CV4_Fill,           type: ir,   addr: 5,  scale: 1,   unit: bottles, description: Q-701 → K-801}
+      - {name: CV1_Full,           type: di,   addr: 0}
+      - {name: CV2_Full,           type: di,   addr: 1}
+      - {name: CV3_Full,           type: di,   addr: 2}
+      - {name: CV4_Full,           type: di,   addr: 3}
+      - {name: PB_Start,           type: di,   addr: 4,  description: Local panel push button}
+      - {name: PB_Stop,            type: di,   addr: 5,  description: Local panel push button}
+      - {name: PB_Reset,           type: di,   addr: 6,  description: Local panel push button}

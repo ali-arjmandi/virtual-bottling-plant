@@ -1,0 +1,7 @@
+# Scripted demo (docs/prd/demo-and-deliverables.md). Start it when WO-1042 is released (~1:00
+# in the video). Times are sim seconds after start. Placeholder until P6 fixes the timeline.
+name: demo
+description: Capper jam cascade, nozzle 7 drift to SPC alarm
+steps:
+  - {at_s: 75,  action: fault, machine: C501, type: jam, duration_s: 45}
+  - {at_s: 150, action: drift, nozzle: 7, rate_g_per_min: -1.5}

@@ -1,0 +1,19 @@
+# Concentrate supply per product. Lots vary in Brix; a few are out of tolerance.
+products:
+  orange:
+    select_code: 1
+    concentrate_brix: 65.0
+    lot_brix_sd: 0.4
+    offspec_lot_probability: 0.04
+    offspec_brix_delta: 3.0
+    lot_volume_l: 4500
+    first_lot_no: 410001
+  apple:
+    select_code: 2
+    concentrate_brix: 70.0
+    lot_brix_sd: 0.4
+    offspec_lot_probability: 0.04
+    offspec_brix_delta: 3.0
+    lot_volume_l: 4500
+    first_lot_no: 520001
+sugar_syrup_brix: 67.0

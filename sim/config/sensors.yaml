@@ -1,0 +1,14 @@
+# Analog sensor behaviour: gaussian noise (sd) and quantisation (resolution), engineering units.
+LT101_Level:       {sd: 0.1,  resolution: 0.1}
+AT101_Brix:        {sd: 0.03, resolution: 0.01}
+FT101_WaterFlow:   {sd: 2.0,  resolution: 1}
+FT102_ConcFlow:    {sd: 0.5,  resolution: 1}
+FT103_SugarFlow:   {sd: 0.5,  resolution: 1}
+ST101_AgitatorRpm: {sd: 0.5,  resolution: 1}
+TT201_InTemp:      {sd: 0.05, resolution: 0.1}
+TT202_OutTemp:     {sd: 0.05, resolution: 0.1}
+FT201_Flow:        {sd: 1.0,  resolution: 1}
+PT201_SteamPressure: {sd: 0.01, resolution: 0.01}
+LT301_Level:       {sd: 0.1,  resolution: 0.1}
+C501_Torque:       {sd: 0.0,  resolution: 0.01}
+LT502_CapHopper:   {sd: 0.2,  resolution: 0.1}

@@ -1,0 +1,10 @@
+# Harness only: which product runs on which weekday (Monday = 0). A change triggers drain + CIP.
+default: orange
+weekdays: {0: orange, 1: orange, 2: apple, 3: apple, 4: orange}
+batch:
+  volume_l: 5000
+  target_brix: 11.5
+  sugar_brix_share: 1.0   # Brix points from sugar syrup
+  mix_minutes: 15
+  allowed_from: "05:30"   # no new batch outside this window
+  allowed_until: "21:30"

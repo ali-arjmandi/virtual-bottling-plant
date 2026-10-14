@@ -1,0 +1,15 @@
+# Human operations. Times are UTC for simplicity.
+shifts:
+  - {name: early, start: "06:00", end: "14:00", response_factor: 1.0,
+     breaks: [{start: "10:00", minutes: 30}]}
+  - {name: late,  start: "14:00", end: "22:00", response_factor: 1.25,
+     breaks: [{start: "18:00", minutes: 30}]}
+working_days: [0, 1, 2, 3, 4]   # Monday = 0
+operator:
+  # Delay between a cause clearing and the operator pressing reset, scaled by the shift factor.
+  reset_delay: {dist: lognormal, median_s: 30, sigma: 0.6, min_s: 5, max_s: 180}
+  # Delay before pressing start at shift start / after a break.
+  start_delay: {dist: uniform, min_s: 30, max_s: 180}
+  button_pulse_s: 1
+  # The line stops for the handover meeting between consecutive shifts (planned time, so a loss).
+  handover_stop_min: 10
