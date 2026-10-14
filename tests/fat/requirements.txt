@@ -1,0 +1,5 @@
+# FAT suite (PLC acceptance tests). Same versions as the sim's test environment.
+pytest==9.1.1
+pymodbus==3.16.1
+pyyaml==6.0.3
+httpx==0.28.1

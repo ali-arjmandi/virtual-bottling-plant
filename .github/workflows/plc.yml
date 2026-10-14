@@ -1,0 +1,44 @@
+name: plc
+
+on:
+  push:
+    paths: ["plc/**", "contracts/**", "tests/fat/**", "sim/**", "docker-compose*.yml",
+            ".github/workflows/plc.yml"]
+  pull_request:
+    paths: ["plc/**", "contracts/**", "tests/fat/**", "sim/**", "docker-compose*.yml",
+            ".github/workflows/plc.yml"]
+  workflow_dispatch:
+
+jobs:
+  contract:
+    name: generated code, file sizes, IO map
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r tests/fat/requirements.txt
+      - run: python plc/scripts/gen_plc_io.py --check
+      - run: plc/scripts/check_file_sizes.sh
+      - run: plc/scripts/build.sh
+      - run: python -m pytest tests/fat/test_io_map_matches_contract.py -v
+
+  fat:
+    name: FAT (sim + PLC in Docker)
+    needs: contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r tests/fat/requirements.txt
+      - name: Build and start sim + plc (dev ports, docker-compose.override.yml)
+        run: docker compose up -d --build sim plc
+      - run: python -m pytest tests/fat -v --durations=0
+      - if: failure()
+        run: docker compose logs --tail 300
+      - if: always()
+        run: docker compose down

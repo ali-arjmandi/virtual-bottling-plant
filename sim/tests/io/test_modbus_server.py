@@ -44,3 +44,21 @@ async def test_disconnected_unit_does_not_reply(
     with pytest.raises(Exception):  # noqa: B017 - pymodbus raises its own timeout type
         await client.read_input_registers(1, count=1, device_id=2)
     client.close()
+
+
+def test_heartbeat_counts_real_time_per_unit(reg_map: RegisterMap) -> None:
+    image = RegisterImage(reg_map)
+    now = [123_456]
+    server = ModbusTcpServer(image, set, monotonic_ms=lambda: now[0])
+    read_ir = bytes([0x04, 0, 0, 0, 1])
+    server.respond(2, 0, read_ir)
+    assert image.get("P201_Heartbeat") == 1234
+    assert image.get("F401_Heartbeat") == 0  # only units that answer are refreshed
+    now[0] = 65_536 * 100 + 500
+    server.respond(2, 0, read_ir)
+    assert image.get("P201_Heartbeat") == 5  # wraps at 16 bits
+
+
+def test_every_unit_has_a_heartbeat(reg_map: RegisterMap) -> None:
+    for equipment in reg_map.equipment.values():
+        assert f"{equipment}_Heartbeat" in reg_map.signals

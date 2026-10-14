@@ -39,8 +39,15 @@ def test_clock_and_reset(runtime: SimRuntime) -> None:
         "speed": 10.0, "paused": True}
     assert client.post("/clock", json={"speed": 7}).status_code == 422
     runtime.run_for(5_000)
-    assert client.post("/reset", json={"seed": 3}).json() == {"seed": 3}
+    assert client.post("/reset", json={"seed": 3}).json() == {"seed": 3, "randomFaults": True}
     assert runtime.t_ms == 0 and runtime.seed == 3
+    assert runtime.plant.scheduler.enabled
+
+
+def test_reset_without_random_faults(runtime: SimRuntime) -> None:
+    client = _client(runtime)
+    assert client.post("/reset", json={"seed": 1, "randomFaults": False}).status_code == 200
+    assert not runtime.plant.scheduler.enabled
 
 
 def test_drift_and_scenario(runtime: SimRuntime) -> None:

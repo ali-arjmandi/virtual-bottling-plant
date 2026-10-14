@@ -76,8 +76,8 @@ def post_clock(body: ClockRequest, request: Request) -> dict[str, Any]:
 
 @router.post("/reset")
 def post_reset(body: ResetRequest, request: Request) -> dict[str, Any]:
-    _rt(request).reset(body.seed)
-    return {"seed": body.seed}
+    _rt(request).reset(body.seed, random_faults=body.random_faults)
+    return {"seed": body.seed, "randomFaults": body.random_faults}
 
 
 @router.post("/scenarios/{name}/run", status_code=202)

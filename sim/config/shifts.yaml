@@ -10,6 +10,7 @@ operator:
   reset_delay: {dist: lognormal, median_s: 30, sigma: 0.6, min_s: 5, max_s: 180}
   # Delay before pressing start at shift start / after a break.
   start_delay: {dist: uniform, min_s: 30, max_s: 180}
-  button_pulse_s: 1
+  # Held long enough for the PLC to see it under ×10 (one Modbus poll cycle ≈ 120 ms real time).
+  button_pulse_s: 3
   # The line stops for the handover meeting between consecutive shifts (planned time, so a loss).
   handover_stop_min: 10

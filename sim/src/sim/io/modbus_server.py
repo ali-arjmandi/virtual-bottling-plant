@@ -1,7 +1,8 @@
 """Modbus TCP server (MBAP framing) serving the register image to the PLC.
 
 A unit that is 'disconnected' (sensor override) or unknown gets no reply at all, so the PLC sees
-a timeout, as with a dead remote I/O station.
+a timeout, as with a dead remote I/O station. Every reply refreshes that unit's `{EQ}_Heartbeat`
+(a real-time comms counter, not sim time, so it keeps counting while the sim is paused).
 """
 
 from __future__ import annotations
@@ -9,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import struct
+import time
 from collections.abc import Callable
 
 from sim.io.modbus_pdu import handle_pdu
@@ -22,9 +24,15 @@ class ModbusTcpServer:
     def __init__(
         self, image: RegisterImage, disconnected_units: Callable[[], set[int]],
         host: str = "0.0.0.0", port: int = 502,
+        monotonic_ms: Callable[[], int] = lambda: int(time.monotonic() * 1000),
     ) -> None:
         self.image = image
         self.disconnected_units = disconnected_units
+        self.monotonic_ms = monotonic_ms
+        self._heartbeats = {
+            unit_id: f"{equipment}_Heartbeat" for unit_id, equipment in image.map.equipment.items()
+            if f"{equipment}_Heartbeat" in image.map.signals
+        }
         self.host, self.port = host, port
         self._server: asyncio.Server | None = None
 
@@ -65,4 +73,6 @@ class ModbusTcpServer:
             return None
         if unit_id in self.disconnected_units():
             return None
+        if unit_id in self._heartbeats:
+            self.image.set(self._heartbeats[unit_id], (self.monotonic_ms() // 100) & 0xFFFF)
         return handle_pdu(self.image, unit_id, pdu)

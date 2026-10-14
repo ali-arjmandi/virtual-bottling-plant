@@ -31,3 +31,4 @@ class ClockRequest(Body):
 
 class ResetRequest(Body):
     seed: int = 42
+    random_faults: bool = True  # False: only injected faults (FAT suite, quiet demos)

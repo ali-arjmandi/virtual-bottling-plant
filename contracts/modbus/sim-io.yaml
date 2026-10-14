@@ -6,7 +6,9 @@
 # type:  di = discrete input (sim → PLC)   ir = input register (sim → PLC)
 #        coil (PLC → sim)                  hr = holding register (PLC → sim)
 # scale: engineering value × scale = raw integer. words: 2 = 32-bit, high word first.
-version: 1
+# {EQ}_Heartbeat: free-running comms counter of the remote I/O station (+1 per 100 ms real time,
+#   wraps at 65536). Keeps counting while the sim is paused; frozen = no replies from that unit.
+version: 1.1
 
 units:
   1:
@@ -20,6 +22,7 @@ units:
       - {name: FT103_SugarFlow,    type: ir,   addr: 4,  scale: 1,   unit: "L/min"}
       - {name: ST101_AgitatorRpm,  type: ir,   addr: 5,  scale: 1,   unit: "rpm"}
       - {name: T101_ConcLotNo,     type: ir,   addr: 6,  scale: 1,   words: 2, description: Barcode scanner on the concentrate feed}
+      - {name: T101_Heartbeat,     type: ir,   addr: 8,  scale: 1}
       - {name: LSL101_Empty,       type: di,   addr: 0}
       - {name: M101_Running,       type: di,   addr: 1}
       - {name: T101_CipDone,       type: di,   addr: 2,  description: Done signal from the CIP skid}
@@ -40,6 +43,7 @@ units:
       - {name: TT202_OutTemp,      type: ir,   addr: 1,  scale: 10,  unit: "°C"}
       - {name: FT201_Flow,         type: ir,   addr: 2,  scale: 1,   unit: "L/min"}
       - {name: PT201_SteamPressure, type: ir,  addr: 3,  scale: 100, unit: "bar"}
+      - {name: P201_Heartbeat,     type: ir,   addr: 4,  scale: 1}
       - {name: ZS203_DivertOpen,   type: di,   addr: 0}
       - {name: XV203_Divert,       type: coil, addr: 0,  description: "1 = divert back to T-101"}
       - {name: TCV201_SteamValve,  type: hr,   addr: 0,  scale: 10,  unit: "%"}
@@ -49,6 +53,7 @@ units:
     description: Buffer tank
     signals:
       - {name: LT301_Level,        type: ir,   addr: 0,  scale: 10,  unit: "%"}
+      - {name: T301_Heartbeat,     type: ir,   addr: 1,  scale: 1}
       - {name: LSL301_Low,         type: di,   addr: 0,  description: Filler suction low level}
       - {name: XV309_Drain,        type: coil, addr: 0}
 
@@ -58,6 +63,7 @@ units:
     signals:
       - {name: F401_Speed,         type: ir,   addr: 0,  scale: 1,   unit: "bpm"}
       - {name: F401_Count,         type: ir,   addr: 1,  scale: 1,   words: 2}
+      - {name: F401_Heartbeat,     type: ir,   addr: 3,  scale: 1}
       - {name: F401_Running,       type: di,   addr: 0}
       - {name: F401_NozzleLeak,    type: di,   addr: 1}
       - {name: F401_Run,           type: coil, addr: 0}
@@ -72,6 +78,7 @@ units:
       - {name: C501_Count,         type: ir,   addr: 1,  scale: 1,   words: 2}
       - {name: C501_Torque,        type: ir,   addr: 3,  scale: 100, unit: "Nm"}
       - {name: LT502_CapHopper,    type: ir,   addr: 4,  scale: 10,  unit: "%"}
+      - {name: C501_Heartbeat,     type: ir,   addr: 5,  scale: 1}
       - {name: C501_Running,       type: di,   addr: 0}
       - {name: C501_Jam,           type: di,   addr: 1}
       - {name: C501_Breakdown,     type: di,   addr: 2}
@@ -86,6 +93,7 @@ units:
       - {name: L601_Speed,         type: ir,   addr: 0,  scale: 1,   unit: "bpm"}
       - {name: L601_Count,         type: ir,   addr: 1,  scale: 1,   words: 2}
       - {name: L601_RollRemaining, type: ir,   addr: 3,  scale: 1,   unit: labels}
+      - {name: L601_Heartbeat,     type: ir,   addr: 4,  scale: 1}
       - {name: L601_Running,       type: di,   addr: 0}
       - {name: L601_RollEmpty,     type: di,   addr: 1}
       - {name: L601_LabelError,    type: di,   addr: 2}
@@ -101,6 +109,7 @@ units:
       - {name: Q701_Count,         type: ir,   addr: 1,  scale: 1,   words: 2}
       - {name: Q701_RejectCount,   type: ir,   addr: 3,  scale: 1,   words: 2}
       - {name: WT701_LastWeight,   type: ir,   addr: 5,  scale: 10,  unit: "g"}
+      - {name: Q701_Heartbeat,     type: ir,   addr: 6,  scale: 1}
       - {name: Q701_N01_Seq,       type: ir,   addr: 10}
       - {name: Q701_N01_Mean,      type: ir,   addr: 11, scale: 10,  unit: "g"}
       - {name: Q701_N01_Range,     type: ir,   addr: 12, scale: 10,  unit: "g"}
@@ -148,6 +157,7 @@ units:
     signals:
       - {name: K801_Speed,         type: ir,   addr: 0,  scale: 1,   unit: "cases/min"}
       - {name: K801_CaseCount,     type: ir,   addr: 1,  scale: 1,   words: 2}
+      - {name: K801_Heartbeat,     type: ir,   addr: 3,  scale: 1}
       - {name: K801_Running,       type: di,   addr: 0}
       - {name: K801_Jam,           type: di,   addr: 1}
       - {name: K801_Breakdown,     type: di,   addr: 2}
@@ -163,6 +173,7 @@ units:
       - {name: CV2_Fill,           type: ir,   addr: 3,  scale: 1,   unit: bottles, description: C-501 → L-601}
       - {name: CV3_Fill,           type: ir,   addr: 4,  scale: 1,   unit: bottles, description: L-601 → Q-701}
       - {name: CV4_Fill,           type: ir,   addr: 5,  scale: 1,   unit: bottles, description: Q-701 → K-801}
+      - {name: LINE_Heartbeat,     type: ir,   addr: 6,  scale: 1}
       - {name: CV1_Full,           type: di,   addr: 0}
       - {name: CV2_Full,           type: di,   addr: 1}
       - {name: CV3_Full,           type: di,   addr: 2}

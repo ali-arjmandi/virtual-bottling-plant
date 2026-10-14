@@ -43,10 +43,11 @@ class SimRuntime:
         self.log.emit(0, "sim_reset", None, seed=seed)
         return plant
 
-    def reset(self, seed: int) -> None:
+    def reset(self, seed: int, random_faults: bool = True) -> None:
         hooks = self.plant.after_tick
         self.plant = self._build(seed)
         self.plant.after_tick.extend(hooks)
+        self.plant.scheduler.enabled = random_faults
 
     @property
     def t_ms(self) -> int:
