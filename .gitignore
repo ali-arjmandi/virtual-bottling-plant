@@ -20,3 +20,6 @@ infra/certs/
 .DS_Store
 .vscode/
 .idea/
+
+# PLC build output (plc/scripts/build.sh)
+plc/build/

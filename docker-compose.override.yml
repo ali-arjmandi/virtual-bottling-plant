@@ -1,8 +1,16 @@
 # Dev only (loaded automatically by `docker compose up`): publishes the sim API and Modbus port
-# on localhost so you can poke at them before the PLC and Instructor Station exist.
+# and the PLC's Modbus server and web UI on localhost (the FAT suite in tests/fat uses these).
 # Zone-faithful run: docker compose -f docker-compose.yml up
 services:
   sim:
     ports:
       - "127.0.0.1:8000:8000"
       - "127.0.0.1:5020:5020"
+  plc:
+    ports:
+      - "127.0.0.1:5502:502"   # PLC Modbus server (%MW/%MD), as the edge bridge sees it
+      - "127.0.0.1:8080:8080"  # OpenPLC web UI, monitoring only (login openplc / openplc)
+
+networks:
+  net-l1-control:
+    internal: false    # dev only: a container on internal networks alone cannot publish ports

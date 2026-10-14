@@ -1,5 +1,5 @@
 # Virtual Bottling Plant. One Docker network per Purdue zone (docs/prd/architecture.md §1).
-# Phase 1: only the L0 simulator. Later phases add plc, edge-bridge, broker, ignition, mes, erp.
+# Phase 2: L0 simulator + L1 soft-PLC. Later phases add edge-bridge, broker, ignition, mes, erp.
 name: virtual-bottling-plant
 
 services:
@@ -16,7 +16,24 @@ services:
       - net-l0-instructor   # REST/WS API for the Instructor Station (port 8000)
     restart: unless-stopped
 
+  plc:
+    build:
+      context: .
+      dockerfile: plc/runtime/Dockerfile
+    environment:
+      PLC_SIM_HOST: sim
+      PLC_POLL_MS: ${PLC_POLL_MS:-50}
+      PLC_SLAVE_TIMEOUT_MS: ${PLC_SLAVE_TIMEOUT_MS:-250}
+    networks:
+      - net-l0-field        # Modbus TCP client of the sim (remote I/O)
+      - net-l1-control      # Modbus TCP server for the edge bridge (port 502)
+    depends_on:
+      - sim
+    restart: unless-stopped
+
 networks:
   net-l0-field:
     internal: true
   net-l0-instructor:
+  net-l1-control:
+    internal: true
