@@ -1,0 +1,22 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node (later phases)
+node_modules/
+.next/
+dist/
+
+# Runs and secrets
+out/
+.env
+infra/certs/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

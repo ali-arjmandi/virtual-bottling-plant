@@ -1,0 +1,8 @@
+# Dev only (loaded automatically by `docker compose up`): publishes the sim API and Modbus port
+# on localhost so you can poke at them before the PLC and Instructor Station exist.
+# Zone-faithful run: docker compose -f docker-compose.yml up
+services:
+  sim:
+    ports:
+      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:5020:5020"

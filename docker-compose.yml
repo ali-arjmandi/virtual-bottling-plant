@@ -1,0 +1,22 @@
+# Virtual Bottling Plant. One Docker network per Purdue zone (docs/prd/architecture.md §1).
+# Phase 1: only the L0 simulator. Later phases add plc, edge-bridge, broker, ignition, mes, erp.
+name: virtual-bottling-plant
+
+services:
+  sim:
+    build:
+      context: .
+      dockerfile: sim/Dockerfile
+    environment:
+      SIM_SEED: ${SIM_SEED:-42}
+      SIM_SPEED: ${SIM_SPEED:-1}
+      SIM_CORS_ORIGINS: ${SIM_CORS_ORIGINS:-}
+    networks:
+      - net-l0-field        # Modbus TCP to the PLC (port 5020)
+      - net-l0-instructor   # REST/WS API for the Instructor Station (port 8000)
+    restart: unless-stopped
+
+networks:
+  net-l0-field:
+    internal: true
+  net-l0-instructor:
