@@ -1,0 +1,321 @@
+{
+  "name": "UDT_Capper",
+  "tagType": "UdtType",
+  "parameters": {
+    "Device": {
+      "dataType": "String",
+      "value": ""
+    }
+  },
+  "tags": [
+    {
+      "name": "C501_Torque",
+      "tagType": "AtomicTag",
+      "dataType": "Float8",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/C501_Torque"
+      },
+      "engUnit": "Nm",
+      "historyEnabled": true,
+      "historyProvider": "SCADA"
+    },
+    {
+      "name": "LT502_CapHopper",
+      "tagType": "AtomicTag",
+      "dataType": "Float8",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/LT502_CapHopper"
+      },
+      "engUnit": "%",
+      "historyEnabled": true,
+      "historyProvider": "SCADA"
+    },
+    {
+      "name": "Alarms",
+      "tagType": "Folder",
+      "tags": [
+        {
+          "name": "C501_Jam",
+          "tagType": "Folder",
+          "tags": [
+            {
+              "name": "Active",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_Jam/Active"
+              },
+              "alarms": [
+                {
+                  "name": "C501_Jam",
+                  "label": "Capper jam",
+                  "priority": "High",
+                  "mode": "Equality",
+                  "setpointA": 1,
+                  "ackMode": "Manual",
+                  "displayPath": {
+                    "bindType": "parameter",
+                    "binding": "Line1/{Device}"
+                  }
+                }
+              ],
+              "eventScripts": [
+                {
+                  "eventid": "alarmAcked",
+                  "script": "\t# Generated: acknowledge this alarm in the PLC too (AlarmAck DCMD via the edge bridge).\n\tsystem.tag.writeBlocking([\"[default]Delft/Packaging/Line1/Line/AlarmAck\"], [10])"
+                }
+              ]
+            },
+            {
+              "name": "Acked",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_Jam/Acked"
+              }
+            },
+            {
+              "name": "FirstOut",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_Jam/FirstOut"
+              }
+            },
+            {
+              "name": "Priority",
+              "tagType": "AtomicTag",
+              "dataType": "Int4",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_Jam/Priority"
+              }
+            }
+          ]
+        },
+        {
+          "name": "C501_Breakdown",
+          "tagType": "Folder",
+          "tags": [
+            {
+              "name": "Active",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_Breakdown/Active"
+              },
+              "alarms": [
+                {
+                  "name": "C501_Breakdown",
+                  "label": "Capper breakdown",
+                  "priority": "Critical",
+                  "mode": "Equality",
+                  "setpointA": 1,
+                  "ackMode": "Manual",
+                  "displayPath": {
+                    "bindType": "parameter",
+                    "binding": "Line1/{Device}"
+                  }
+                }
+              ],
+              "eventScripts": [
+                {
+                  "eventid": "alarmAcked",
+                  "script": "\t# Generated: acknowledge this alarm in the PLC too (AlarmAck DCMD via the edge bridge).\n\tsystem.tag.writeBlocking([\"[default]Delft/Packaging/Line1/Line/AlarmAck\"], [11])"
+                }
+              ]
+            },
+            {
+              "name": "Acked",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_Breakdown/Acked"
+              }
+            },
+            {
+              "name": "FirstOut",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_Breakdown/FirstOut"
+              }
+            },
+            {
+              "name": "Priority",
+              "tagType": "AtomicTag",
+              "dataType": "Int4",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_Breakdown/Priority"
+              }
+            }
+          ]
+        },
+        {
+          "name": "C501_CapsEmpty",
+          "tagType": "Folder",
+          "tags": [
+            {
+              "name": "Active",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_CapsEmpty/Active"
+              },
+              "alarms": [
+                {
+                  "name": "C501_CapsEmpty",
+                  "label": "Cap hopper empty",
+                  "priority": "Medium",
+                  "mode": "Equality",
+                  "setpointA": 1,
+                  "ackMode": "Manual",
+                  "displayPath": {
+                    "bindType": "parameter",
+                    "binding": "Line1/{Device}"
+                  }
+                }
+              ],
+              "eventScripts": [
+                {
+                  "eventid": "alarmAcked",
+                  "script": "\t# Generated: acknowledge this alarm in the PLC too (AlarmAck DCMD via the edge bridge).\n\tsystem.tag.writeBlocking([\"[default]Delft/Packaging/Line1/Line/AlarmAck\"], [12])"
+                }
+              ]
+            },
+            {
+              "name": "Acked",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_CapsEmpty/Acked"
+              }
+            },
+            {
+              "name": "FirstOut",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_CapsEmpty/FirstOut"
+              }
+            },
+            {
+              "name": "Priority",
+              "tagType": "AtomicTag",
+              "dataType": "Int4",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_CapsEmpty/Priority"
+              }
+            }
+          ]
+        },
+        {
+          "name": "C501_CommsLost",
+          "tagType": "Folder",
+          "tags": [
+            {
+              "name": "Active",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_CommsLost/Active"
+              },
+              "alarms": [
+                {
+                  "name": "C501_CommsLost",
+                  "label": "C-501 remote I/O not responding",
+                  "priority": "Critical",
+                  "mode": "Equality",
+                  "setpointA": 1,
+                  "ackMode": "Manual",
+                  "displayPath": {
+                    "bindType": "parameter",
+                    "binding": "Line1/{Device}"
+                  }
+                }
+              ],
+              "eventScripts": [
+                {
+                  "eventid": "alarmAcked",
+                  "script": "\t# Generated: acknowledge this alarm in the PLC too (AlarmAck DCMD via the edge bridge).\n\tsystem.tag.writeBlocking([\"[default]Delft/Packaging/Line1/Line/AlarmAck\"], [13])"
+                }
+              ]
+            },
+            {
+              "name": "Acked",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_CommsLost/Acked"
+              }
+            },
+            {
+              "name": "FirstOut",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_CommsLost/FirstOut"
+              }
+            },
+            {
+              "name": "Priority",
+              "tagType": "AtomicTag",
+              "dataType": "Int4",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/C501_CommsLost/Priority"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Count",
+      "tagType": "AtomicTag",
+      "dataType": "Int8",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Count"
+      },
+      "historyEnabled": true,
+      "historyProvider": "SCADA"
+    }
+  ],
+  "typeId": "UDT_PackMLMachine"
+}

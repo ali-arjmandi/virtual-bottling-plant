@@ -1,0 +1,46 @@
+{
+  "name": "UDT_Nozzle",
+  "tagType": "UdtType",
+  "parameters": {
+    "Device": {
+      "dataType": "String",
+      "value": ""
+    },
+    "Nozzle": {
+      "dataType": "String",
+      "value": ""
+    }
+  },
+  "tags": [
+    {
+      "name": "Seq",
+      "tagType": "AtomicTag",
+      "dataType": "Int4",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Nozzles/{Nozzle}/Seq"
+      }
+    },
+    {
+      "name": "Mean",
+      "tagType": "AtomicTag",
+      "dataType": "Float8",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Nozzles/{Nozzle}/Mean"
+      }
+    },
+    {
+      "name": "Range",
+      "tagType": "AtomicTag",
+      "dataType": "Float8",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Nozzles/{Nozzle}/Range"
+      }
+    }
+  ]
+}

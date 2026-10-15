@@ -1,0 +1,369 @@
+{
+  "name": "UDT_Checkweigher",
+  "tagType": "UdtType",
+  "parameters": {
+    "Device": {
+      "dataType": "String",
+      "value": ""
+    }
+  },
+  "tags": [
+    {
+      "name": "RejectLimitG",
+      "tagType": "AtomicTag",
+      "dataType": "Float8",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/RejectLimitG"
+      },
+      "engUnit": "g",
+      "historyEnabled": true,
+      "historyProvider": "SCADA"
+    },
+    {
+      "name": "WT701_LastWeight",
+      "tagType": "AtomicTag",
+      "dataType": "Float8",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/WT701_LastWeight"
+      },
+      "engUnit": "g",
+      "historyEnabled": true,
+      "historyProvider": "SCADA"
+    },
+    {
+      "name": "Alarms",
+      "tagType": "Folder",
+      "tags": [
+        {
+          "name": "Q701_CommsLost",
+          "tagType": "Folder",
+          "tags": [
+            {
+              "name": "Active",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/Q701_CommsLost/Active"
+              },
+              "alarms": [
+                {
+                  "name": "Q701_CommsLost",
+                  "label": "Q-701 remote I/O not responding",
+                  "priority": "Critical",
+                  "mode": "Equality",
+                  "setpointA": 1,
+                  "ackMode": "Manual",
+                  "displayPath": {
+                    "bindType": "parameter",
+                    "binding": "Line1/{Device}"
+                  }
+                }
+              ],
+              "eventScripts": [
+                {
+                  "eventid": "alarmAcked",
+                  "script": "\t# Generated: acknowledge this alarm in the PLC too (AlarmAck DCMD via the edge bridge).\n\tsystem.tag.writeBlocking([\"[default]Delft/Packaging/Line1/Line/AlarmAck\"], [18])"
+                }
+              ]
+            },
+            {
+              "name": "Acked",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/Q701_CommsLost/Acked"
+              }
+            },
+            {
+              "name": "FirstOut",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/Q701_CommsLost/FirstOut"
+              }
+            },
+            {
+              "name": "Priority",
+              "tagType": "AtomicTag",
+              "dataType": "Int4",
+              "valueSource": "reference",
+              "sourceTagPath": {
+                "bindType": "parameter",
+                "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Alarms/Q701_CommsLost/Priority"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Count",
+      "tagType": "AtomicTag",
+      "dataType": "Int8",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Count"
+      },
+      "historyEnabled": true,
+      "historyProvider": "SCADA"
+    },
+    {
+      "name": "RejectCount",
+      "tagType": "AtomicTag",
+      "dataType": "Int8",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/RejectCount"
+      },
+      "historyEnabled": true,
+      "historyProvider": "SCADA"
+    },
+    {
+      "name": "GoodCount",
+      "tagType": "AtomicTag",
+      "dataType": "Int8",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/GoodCount"
+      },
+      "historyEnabled": true,
+      "historyProvider": "SCADA"
+    },
+    {
+      "name": "Nozzles",
+      "tagType": "Folder",
+      "tags": [
+        {
+          "name": "N01",
+          "tagType": "UdtInstance",
+          "typeId": "UDT_Nozzle",
+          "parameters": {
+            "Device": {
+              "dataType": "String",
+              "value": {
+                "bindType": "parameter",
+                "binding": "{Device}"
+              }
+            },
+            "Nozzle": {
+              "dataType": "String",
+              "value": "N01"
+            }
+          }
+        },
+        {
+          "name": "N02",
+          "tagType": "UdtInstance",
+          "typeId": "UDT_Nozzle",
+          "parameters": {
+            "Device": {
+              "dataType": "String",
+              "value": {
+                "bindType": "parameter",
+                "binding": "{Device}"
+              }
+            },
+            "Nozzle": {
+              "dataType": "String",
+              "value": "N02"
+            }
+          }
+        },
+        {
+          "name": "N03",
+          "tagType": "UdtInstance",
+          "typeId": "UDT_Nozzle",
+          "parameters": {
+            "Device": {
+              "dataType": "String",
+              "value": {
+                "bindType": "parameter",
+                "binding": "{Device}"
+              }
+            },
+            "Nozzle": {
+              "dataType": "String",
+              "value": "N03"
+            }
+          }
+        },
+        {
+          "name": "N04",
+          "tagType": "UdtInstance",
+          "typeId": "UDT_Nozzle",
+          "parameters": {
+            "Device": {
+              "dataType": "String",
+              "value": {
+                "bindType": "parameter",
+                "binding": "{Device}"
+              }
+            },
+            "Nozzle": {
+              "dataType": "String",
+              "value": "N04"
+            }
+          }
+        },
+        {
+          "name": "N05",
+          "tagType": "UdtInstance",
+          "typeId": "UDT_Nozzle",
+          "parameters": {
+            "Device": {
+              "dataType": "String",
+              "value": {
+                "bindType": "parameter",
+                "binding": "{Device}"
+              }
+            },
+            "Nozzle": {
+              "dataType": "String",
+              "value": "N05"
+            }
+          }
+        },
+        {
+          "name": "N06",
+          "tagType": "UdtInstance",
+          "typeId": "UDT_Nozzle",
+          "parameters": {
+            "Device": {
+              "dataType": "String",
+              "value": {
+                "bindType": "parameter",
+                "binding": "{Device}"
+              }
+            },
+            "Nozzle": {
+              "dataType": "String",
+              "value": "N06"
+            }
+          }
+        },
+        {
+          "name": "N07",
+          "tagType": "UdtInstance",
+          "typeId": "UDT_Nozzle",
+          "parameters": {
+            "Device": {
+              "dataType": "String",
+              "value": {
+                "bindType": "parameter",
+                "binding": "{Device}"
+              }
+            },
+            "Nozzle": {
+              "dataType": "String",
+              "value": "N07"
+            }
+          }
+        },
+        {
+          "name": "N08",
+          "tagType": "UdtInstance",
+          "typeId": "UDT_Nozzle",
+          "parameters": {
+            "Device": {
+              "dataType": "String",
+              "value": {
+                "bindType": "parameter",
+                "binding": "{Device}"
+              }
+            },
+            "Nozzle": {
+              "dataType": "String",
+              "value": "N08"
+            }
+          }
+        },
+        {
+          "name": "N09",
+          "tagType": "UdtInstance",
+          "typeId": "UDT_Nozzle",
+          "parameters": {
+            "Device": {
+              "dataType": "String",
+              "value": {
+                "bindType": "parameter",
+                "binding": "{Device}"
+              }
+            },
+            "Nozzle": {
+              "dataType": "String",
+              "value": "N09"
+            }
+          }
+        },
+        {
+          "name": "N10",
+          "tagType": "UdtInstance",
+          "typeId": "UDT_Nozzle",
+          "parameters": {
+            "Device": {
+              "dataType": "String",
+              "value": {
+                "bindType": "parameter",
+                "binding": "{Device}"
+              }
+            },
+            "Nozzle": {
+              "dataType": "String",
+              "value": "N10"
+            }
+          }
+        },
+        {
+          "name": "N11",
+          "tagType": "UdtInstance",
+          "typeId": "UDT_Nozzle",
+          "parameters": {
+            "Device": {
+              "dataType": "String",
+              "value": {
+                "bindType": "parameter",
+                "binding": "{Device}"
+              }
+            },
+            "Nozzle": {
+              "dataType": "String",
+              "value": "N11"
+            }
+          }
+        },
+        {
+          "name": "N12",
+          "tagType": "UdtInstance",
+          "typeId": "UDT_Nozzle",
+          "parameters": {
+            "Device": {
+              "dataType": "String",
+              "value": {
+                "bindType": "parameter",
+                "binding": "{Device}"
+              }
+            },
+            "Nozzle": {
+              "dataType": "String",
+              "value": "N12"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "typeId": "UDT_PackMLMachine"
+}

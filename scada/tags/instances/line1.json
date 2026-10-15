@@ -1,0 +1,135 @@
+{
+  "name": "",
+  "tagType": "Folder",
+  "tags": [
+    {
+      "name": "Delft",
+      "tagType": "Folder",
+      "tags": [
+        {
+          "name": "Process",
+          "tagType": "Folder",
+          "tags": [
+            {
+              "name": "Line1",
+              "tagType": "Folder",
+              "tags": [
+                {
+                  "name": "T101",
+                  "tagType": "UdtInstance",
+                  "typeId": "UDT_MixTank",
+                  "parameters": {
+                    "Device": {
+                      "dataType": "String",
+                      "value": "T101"
+                    }
+                  }
+                },
+                {
+                  "name": "P201",
+                  "tagType": "UdtInstance",
+                  "typeId": "UDT_Pasteurizer",
+                  "parameters": {
+                    "Device": {
+                      "dataType": "String",
+                      "value": "P201"
+                    }
+                  }
+                },
+                {
+                  "name": "T301",
+                  "tagType": "UdtInstance",
+                  "typeId": "UDT_Tank",
+                  "parameters": {
+                    "Device": {
+                      "dataType": "String",
+                      "value": "T301"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Packaging",
+          "tagType": "Folder",
+          "tags": [
+            {
+              "name": "Line1",
+              "tagType": "Folder",
+              "tags": [
+                {
+                  "name": "F401",
+                  "tagType": "UdtInstance",
+                  "typeId": "UDT_Filler",
+                  "parameters": {
+                    "Device": {
+                      "dataType": "String",
+                      "value": "F401"
+                    }
+                  }
+                },
+                {
+                  "name": "C501",
+                  "tagType": "UdtInstance",
+                  "typeId": "UDT_Capper",
+                  "parameters": {
+                    "Device": {
+                      "dataType": "String",
+                      "value": "C501"
+                    }
+                  }
+                },
+                {
+                  "name": "L601",
+                  "tagType": "UdtInstance",
+                  "typeId": "UDT_Labeler",
+                  "parameters": {
+                    "Device": {
+                      "dataType": "String",
+                      "value": "L601"
+                    }
+                  }
+                },
+                {
+                  "name": "Q701",
+                  "tagType": "UdtInstance",
+                  "typeId": "UDT_Checkweigher",
+                  "parameters": {
+                    "Device": {
+                      "dataType": "String",
+                      "value": "Q701"
+                    }
+                  }
+                },
+                {
+                  "name": "K801",
+                  "tagType": "UdtInstance",
+                  "typeId": "UDT_CasePacker",
+                  "parameters": {
+                    "Device": {
+                      "dataType": "String",
+                      "value": "K801"
+                    }
+                  }
+                },
+                {
+                  "name": "Line",
+                  "tagType": "UdtInstance",
+                  "typeId": "UDT_Line",
+                  "parameters": {
+                    "Device": {
+                      "dataType": "String",
+                      "value": "LINE"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

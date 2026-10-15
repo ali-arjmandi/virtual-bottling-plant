@@ -1,0 +1,175 @@
+{
+  "name": "UDT_PackMLMachine",
+  "tagType": "UdtType",
+  "parameters": {
+    "Device": {
+      "dataType": "String",
+      "value": ""
+    }
+  },
+  "tags": [
+    {
+      "name": "State",
+      "tagType": "AtomicTag",
+      "dataType": "Int4",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/State"
+      },
+      "eventScripts": [
+        {
+          "eventid": "valueChanged",
+          "script": "\t# Generated (scada/scripts/derived-members.ts): start the stop-reason timer (SCA-30).\n\tif currentValue.value == 6:\n\t\treturn\n\tif not initialChange and previousValue.value != 6:\n\t\treturn\n\tbase = str(tagPath).rsplit(\"/\", 1)[0]\n\tsim = system.tag.readBlocking([\"[default]Delft/Packaging/Line1/Line/SimTimeMs\"])[0].value\n\tsystem.tag.writeBlocking([base + \"/NotRunningSinceMs\"], [sim])"
+        }
+      ]
+    },
+    {
+      "name": "Mode",
+      "tagType": "AtomicTag",
+      "dataType": "Int4",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Mode"
+      }
+    },
+    {
+      "name": "StopReason",
+      "tagType": "AtomicTag",
+      "dataType": "Int4",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/StopReason"
+      }
+    },
+    {
+      "name": "AlarmWord",
+      "tagType": "AtomicTag",
+      "dataType": "Int4",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/AlarmWord"
+      }
+    },
+    {
+      "name": "CommsOk",
+      "tagType": "AtomicTag",
+      "dataType": "Boolean",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/CommsOk"
+      }
+    },
+    {
+      "name": "Blocked",
+      "tagType": "AtomicTag",
+      "dataType": "Boolean",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Blocked"
+      }
+    },
+    {
+      "name": "Starved",
+      "tagType": "AtomicTag",
+      "dataType": "Boolean",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Starved"
+      }
+    },
+    {
+      "name": "Running",
+      "tagType": "AtomicTag",
+      "dataType": "Boolean",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Running"
+      }
+    },
+    {
+      "name": "Speed",
+      "tagType": "AtomicTag",
+      "dataType": "Int4",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Speed"
+      },
+      "engUnit": "bpm",
+      "historyEnabled": true,
+      "historyProvider": "SCADA"
+    },
+    {
+      "name": "SpeedSP",
+      "tagType": "AtomicTag",
+      "dataType": "Int4",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/SpeedSP"
+      },
+      "engUnit": "bpm",
+      "historyEnabled": true,
+      "historyProvider": "SCADA"
+    },
+    {
+      "name": "Cmd_Start",
+      "tagType": "AtomicTag",
+      "dataType": "Boolean",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Cmd_Start"
+      }
+    },
+    {
+      "name": "Cmd_Stop",
+      "tagType": "AtomicTag",
+      "dataType": "Boolean",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Cmd_Stop"
+      }
+    },
+    {
+      "name": "Cmd_Reset",
+      "tagType": "AtomicTag",
+      "dataType": "Boolean",
+      "valueSource": "reference",
+      "sourceTagPath": {
+        "bindType": "parameter",
+        "binding": "[MQTT Engine]Edge Nodes/DelftsSap/Line1/{Device}/Cmd_Reset"
+      }
+    },
+    {
+      "name": "StateText",
+      "tagType": "AtomicTag",
+      "dataType": "String",
+      "valueSource": "expr",
+      "expression": "case({[.]State}, 0, \"Undefined\", 1, \"Clearing\", 2, \"Stopped\", 3, \"Starting\", 4, \"Idle\", 5, \"Suspended\", 6, \"Execute\", 7, \"Stopping\", 8, \"Aborting\", 9, \"Aborted\", 10, \"Holding\", 11, \"Held\", 12, \"Unholding\", 13, \"Suspending\", 14, \"Unsuspending\", 15, \"Resetting\", 16, \"Completing\", 17, \"Complete\", \"Unknown\")"
+    },
+    {
+      "name": "NotRunningSinceMs",
+      "tagType": "AtomicTag",
+      "dataType": "Int8",
+      "valueSource": "memory",
+      "value": 0
+    },
+    {
+      "name": "ReasonNeeded",
+      "tagType": "AtomicTag",
+      "dataType": "Boolean",
+      "valueSource": "expr",
+      "expression": "({[.]State} = 2 || {[.]State} = 9 || {[.]State} = 11) && {[.]StopReason} < 100 && {[.]NotRunningSinceMs} > 0 && toInt64({[default]Delft/Packaging/Line1/Line/SimTimeMs}) - {[.]NotRunningSinceMs} > 120000"
+    }
+  ]
+}

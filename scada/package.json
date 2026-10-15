@@ -1,0 +1,15 @@
+{
+  "name": "@vbp/scada",
+  "version": "0.1.0",
+  "private": true,
+  "description": "L2 Ignition HMI: tags generated from /contracts, Perspective project and gateway config.",
+  "type": "module",
+  "scripts": {
+    "gen": "tsx scripts/gen-tags.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@vbp/contracts": "workspace:^"
+  }
+}

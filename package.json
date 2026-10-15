@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r --filter '!tests-uns' test"
+    "test": "pnpm -r --filter '!tests-uns' test",
+    "gen:scada": "pnpm --filter @vbp/scada gen"
   },
   "devDependencies": {
     "@eslint/js": "^9",
