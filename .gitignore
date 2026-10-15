@@ -14,7 +14,7 @@ dist/
 # Runs and secrets
 out/
 .env
-infra/certs/
+infra/certs/out/
 
 # OS / editor
 .DS_Store
