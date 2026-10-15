@@ -23,8 +23,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Generated contracts are up to date
-        run: pnpm gen:contracts && git diff --exit-code
+      - name: Generated contracts and SCADA tags are up to date
+        run: pnpm gen:contracts && pnpm gen:scada && git diff --exit-code
       - run: pnpm lint
       - run: pnpm build
       - run: pnpm typecheck
