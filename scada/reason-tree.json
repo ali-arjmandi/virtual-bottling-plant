@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "description": "Operator stop reasons (PackML Admin.StopReason >= 100), shared by the HMI stop-reason popup (SCA-30) and the MES seed data (MES-42/43). Codes 1-99 are PLC alarm ids. lossCategory is the OEE six-big-losses class; planned stops are excluded from planned production time (MES-50).",
+  "categories": [
+    {
+      "id": "breakdown",
+      "label": "Breakdown",
+      "lossCategory": "breakdown",
+      "reasons": [
+        { "code": 100, "label": "Mechanical failure" },
+        { "code": 101, "label": "Electrical failure" },
+        { "code": 102, "label": "Waiting for maintenance" },
+        { "code": 103, "label": "Pneumatics / air supply" }
+      ]
+    },
+    {
+      "id": "setup",
+      "label": "Setup and changeover",
+      "lossCategory": "setup",
+      "reasons": [
+        { "code": 120, "label": "Product changeover" },
+        { "code": 121, "label": "CIP" },
+        { "code": 122, "label": "Label or cap reel change" },
+        { "code": 123, "label": "Format adjustment" }
+      ]
+    },
+    {
+      "id": "minor-stop",
+      "label": "Minor stop",
+      "lossCategory": "minor-stop",
+      "reasons": [
+        { "code": 140, "label": "Jam cleared" },
+        { "code": 141, "label": "Fallen bottle" },
+        { "code": 142, "label": "Sensor cleaning or adjustment" },
+        { "code": 143, "label": "Material refill (caps, labels, cases)" }
+      ]
+    },
+    {
+      "id": "reduced-speed",
+      "label": "Reduced speed",
+      "lossCategory": "reduced-speed",
+      "reasons": [
+        { "code": 160, "label": "Running slow for quality" },
+        { "code": 161, "label": "Upstream supply (buffer, batch)" }
+      ]
+    },
+    {
+      "id": "startup-reject",
+      "label": "Start-up",
+      "lossCategory": "startup-reject",
+      "reasons": [
+        { "code": 180, "label": "Start-up adjustment" },
+        { "code": 181, "label": "Waiting for first-off approval" }
+      ]
+    },
+    {
+      "id": "quality",
+      "label": "Quality",
+      "lossCategory": "production-reject",
+      "reasons": [
+        { "code": 200, "label": "Quality check or hold" },
+        { "code": 201, "label": "Fill weight adjustment" }
+      ]
+    },
+    {
+      "id": "planned",
+      "label": "Planned stop",
+      "lossCategory": "planned",
+      "reasons": [
+        { "code": 300, "label": "Break" },
+        { "code": 301, "label": "Shift handover" },
+        { "code": 302, "label": "Meeting or training" },
+        { "code": 303, "label": "No work order" }
+      ]
+    }
+  ]
+}
