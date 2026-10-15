@@ -1,0 +1,17 @@
+{
+  "name": "tests-uns",
+  "version": "0.1.0",
+  "private": true,
+  "description": "UNS acceptance tests (l2-edge-uns.md): run against docker compose with the dev override.",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run specs --exclude specs/link-loss.spec.ts",
+    "test:link-loss": "vitest run specs/link-loss.spec.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@vbp/contracts": "workspace:^",
+    "mqtt": "^5",
+    "sparkplug-payload": "^1"
+  }
+}
