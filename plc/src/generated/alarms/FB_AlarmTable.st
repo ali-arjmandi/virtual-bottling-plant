@@ -56,11 +56,13 @@ FUNCTION_BLOCK FB_AlarmTable
     Standing : INT;
     StandingLastScan : INT;
   END_VAR
-  (* First-out re-arms once every alarm is cleared and acknowledged. *)
+  (* First-out re-arms once every alarm is cleared and acknowledged. The line's
+     FirstOutId follows the alarm holding the flag, so it drops to 0 as soon as that
+     alarm is cleared and acked, even while other alarms are still shown. *)
   IF StandingLastScan = 0 THEN
     FirstOutFree := TRUE;
-    Summary.FirstOutId := 0;
   END_IF;
+  Summary.FirstOutId := 0;
   Standing := 0;
   Summary.ActiveCount := 0;
   Summary.T101_Word := 0;

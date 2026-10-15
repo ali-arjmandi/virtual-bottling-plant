@@ -13,11 +13,13 @@ def alarm_table_fb(plc: PlcIo) -> str:
     locals_ = [f"Alm_{a.name} : FB_Alarm;" for a in plc.alarms]
     locals_ += ["FirstOutFree : BOOL := TRUE;", "Standing : INT;", "StandingLastScan : INT;"]
     body = [
-        "(* First-out re-arms once every alarm is cleared and acknowledged. *)",
+        "(* First-out re-arms once every alarm is cleared and acknowledged. The line's",
+        "   FirstOutId follows the alarm holding the flag, so it drops to 0 as soon as that",
+        "   alarm is cleared and acked, even while other alarms are still shown. *)",
         "IF StandingLastScan = 0 THEN",
         "  FirstOutFree := TRUE;",
-        "  Summary.FirstOutId := 0;",
         "END_IF;",
+        "Summary.FirstOutId := 0;",
         "Standing := 0;",
         "Summary.ActiveCount := 0;",
     ]

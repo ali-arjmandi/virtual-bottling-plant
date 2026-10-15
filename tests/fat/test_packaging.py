@@ -55,6 +55,21 @@ def test_first_out_alarm(line: PlcClient, sim: SimApi) -> None:
     assert not line.alarm("L601_LabelError")["acked"]
 
 
+def test_first_out_follows_its_alarm(line: PlcClient, sim: SimApi) -> None:
+    """The line's first-out id drops with its alarm, even while a later alarm is still active."""
+    sim.fault("C501", "jam", duration_s=20)
+    wait_until(lambda: line.alarm("C501_Jam")["active"], real_s(3), "C501_Jam active")
+    sim.fault("L601", "label_error", duration_s=600)
+    wait_until(lambda: line.alarm("L601_LabelError")["active"], real_s(3), "L601_LabelError")
+    assert line.get("LINE", "FirstOutAlarmId") == C501_JAM
+    wait_until(lambda: not line.alarm("C501_Jam")["active"], real_s(30), "the jam cleared")
+    line.command("AlarmAck", C501_JAM)
+    wait_until(lambda: line.get("LINE", "FirstOutAlarmId") == 0, 3,
+               "FirstOutAlarmId back to 0 with the label error still active")
+    assert line.alarm("L601_LabelError")["active"]
+    assert not line.alarm("L601_LabelError")["first_out"]  # it came second: never first-out
+
+
 def test_comms_loss(line: PlcClient, sim: SimApi) -> None:
     sim.override("C501_Torque", "disconnect")  # unit 5 stops answering
     wait_until(lambda: not line.get("C501", "CommsOk"), 4, "C-501 comms lost")
