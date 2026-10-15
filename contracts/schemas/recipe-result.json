@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "recipe-result.json",
+  "title": "RecipeResult",
+  "description": "Outcome of a recipe download (handshake in contracts.md §2).",
+  "type": "object",
+  "allOf": [{ "$ref": "envelope.json" }],
+  "properties": {
+    "ts": true, "source": true, "schemaVersion": true, "messageId": true,
+    "requestId": { "type": "string", "description": "messageId of the recipe command" },
+    "workOrderNo": { "type": "string" },
+    "recipeId": { "type": "integer" },
+    "recipeVersion": { "type": "integer" },
+    "result": { "enum": ["Ack", "Nak", "Timeout", "Invalid"] },
+    "nakCode": { "type": ["integer", "null"], "description": "plc-io RecipeNak number" },
+    "reason": { "type": ["string", "null"], "description": "Nak name, timeout or validation text" },
+    "durationMs": { "type": "integer", "minimum": 0 }
+  },
+  "required": ["requestId", "recipeId", "recipeVersion", "result", "nakCode", "reason", "durationMs"],
+  "additionalProperties": false
+}

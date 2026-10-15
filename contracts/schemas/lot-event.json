@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lot-event.json",
+  "title": "LotEvent",
+  "description": "Product lot lifecycle and quality status (published by MES).",
+  "type": "object",
+  "allOf": [{ "$ref": "envelope.json" }],
+  "properties": {
+    "ts": true, "source": true, "schemaVersion": true, "messageId": true,
+    "lotCode": { "type": "string", "pattern": "^L1-[0-9]{8}-[0-9]{3}$" },
+    "event": { "enum": ["opened", "closed", "held", "released", "scrapped"] },
+    "orderNo": { "type": "string" },
+    "reason": { "type": ["string", "null"] }
+  },
+  "required": ["lotCode", "event", "orderNo", "reason"],
+  "additionalProperties": false
+}

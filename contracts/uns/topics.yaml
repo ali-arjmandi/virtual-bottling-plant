@@ -1,0 +1,91 @@
+# Unified Namespace: Sparkplug B telemetry + JSON events/commands. Rules: docs/prd/contracts.md §3.
+#
+# Sparkplug metrics are derived from contracts/modbus/plc-io.yaml, never listed by hand:
+#   status metric        → same name on its device          (P201 TT202_OutTemp, F401 State)
+#   Q701 nozzle subgroup → Nozzles/N01/Seq|Mean|Range        (`/` = folder in Ignition)
+#   alarm                → Alarms/{name}/Active|Acked|FirstOut (Boolean) + Priority (Int32),
+#                          on the alarm's device
+#   counter              → device prefix removed            (F401_Count → F401 Count),
+#                          except the overrides below
+# Writable metrics (DCMD) are listed under `commands`; the bridge publishes them in DBIRTH.
+version: 1
+
+sparkplug:
+  namespace: spBv1.0
+  group: DelftsSap
+  node: Line1
+  # area/cell place the device in the ISA-95 JSON tree; `commands` names a command set below.
+  devices:
+    T101: {area: process,   cell: mixer}
+    P201: {area: process,   cell: pasteurizer}
+    T301: {area: process,   cell: buffer}
+    F401: {area: packaging, cell: filler,       commands: packaging, state_events: true}
+    C501: {area: packaging, cell: capper,       commands: packaging, state_events: true}
+    L601: {area: packaging, cell: labeler,      commands: packaging, state_events: true}
+    Q701: {area: packaging, cell: checkweigher, commands: packaging, state_events: true}
+    K801: {area: packaging, cell: casepacker,   commands: packaging, state_events: true}
+    LINE: {area: packaging, cell: line,         commands: line,      state_events: true}
+  counter_overrides:
+    SIM_TimeMs: {device: LINE, metric: SimTimeMs}
+  # metric → plc-io command word. `value` is a Command enum name written when the metric is
+  # set true (momentary); without it the metric's integer value is written as is.
+  commands:
+    packaging:
+      - {metric: Cmd_Start,  type: Boolean, word: "{device}_Cmd", value: Start}
+      - {metric: Cmd_Stop,   type: Boolean, word: "{device}_Cmd", value: Stop}
+      - {metric: Cmd_Reset,  type: Boolean, word: "{device}_Cmd", value: Reset}
+      - {metric: StopReason, type: Int32,   word: "{device}_StopReason", range: [100, 32767]}
+    line:
+      - {metric: Cmd_Start,  type: Boolean, word: LINE_Cmd, value: Start}
+      - {metric: Cmd_Stop,   type: Boolean, word: LINE_Cmd, value: Stop}
+      - {metric: Cmd_Reset,  type: Boolean, word: LINE_Cmd, value: Reset}
+      - {metric: AlarmAck,   type: Int32,   word: AlarmAck, description: "Alarm id, or -1 = all"}
+
+json:
+  root: delftssap/delft
+  # {area}, {cell} come from the device table above. schema = file in contracts/schemas/.
+  topics:
+    state:         {path: "packaging/line1/{cell}/state",        publisher: edge-bridge, retained: true,  schema: state-event}
+    batch:         {path: "process/line1/mixer/batch",           publisher: edge-bridge, retained: false, schema: batch-event}
+    divert:        {path: "process/line1/pasteurizer/divert",    publisher: edge-bridge, retained: false, schema: divert-event}
+    workorder:     {path: "packaging/line1/events/workorder",    publisher: mes-api,     retained: true,  schema: workorder-event}
+    lot:           {path: "packaging/line1/events/lot",          publisher: mes-api,     retained: false, schema: lot-event}
+    recipe:        {path: "packaging/line1/cmd/recipe",          publisher: mes-api,     retained: false, schema: recipe-command}
+    recipe_result: {path: "packaging/line1/cmd/recipe/result",   publisher: edge-bridge, retained: false, schema: recipe-result}
+
+# Broker ACL (UNS-02), default deny. `json:<topic>` expands to that topic's full path
+# (`{cell}` → `+`). infra/broker/gen-acl.ts writes infra/broker/acl.conf from this table.
+acl:
+  edge-bridge:
+    publish:
+      - spBv1.0/DelftsSap/NBIRTH/Line1
+      - spBv1.0/DelftsSap/NDEATH/Line1
+      - spBv1.0/DelftsSap/NDATA/Line1
+      - spBv1.0/DelftsSap/DBIRTH/Line1/+
+      - spBv1.0/DelftsSap/DDEATH/Line1/+
+      - spBv1.0/DelftsSap/DDATA/Line1/+
+      - json:state
+      - json:batch
+      - json:divert
+      - json:recipe_result
+    subscribe:
+      - spBv1.0/DelftsSap/NCMD/Line1
+      - spBv1.0/DelftsSap/DCMD/Line1/+
+      - spBv1.0/STATE/+
+      - json:recipe
+  ignition:
+    publish:
+      - spBv1.0/DelftsSap/NCMD/Line1          # rebirth requests
+      - spBv1.0/DelftsSap/DCMD/Line1/+
+      - spBv1.0/STATE/+                       # primary host state
+    subscribe:
+      - spBv1.0/#
+      - delftssap/#
+  mes-api:
+    publish:
+      - json:workorder
+      - json:lot
+      - json:recipe
+    subscribe:
+      - spBv1.0/#
+      - delftssap/#

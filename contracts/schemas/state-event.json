@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "state-event.json",
+  "title": "StateEvent",
+  "description": "PackML state change of one packaging machine or the line (retained).",
+  "type": "object",
+  "allOf": [{ "$ref": "envelope.json" }],
+  "properties": {
+    "ts": true, "source": true, "schemaVersion": true, "messageId": true,
+    "device": { "type": "string", "description": "Sparkplug device, e.g. C501" },
+    "state": { "$ref": "#/$defs/packMLState" },
+    "previousState": { "$ref": "#/$defs/packMLState" },
+    "stopReason": { "type": "integer", "description": "1-99 alarm id, >= 100 operator code, 0 none" },
+    "blocked": { "type": "boolean" },
+    "starved": { "type": "boolean" },
+    "firstOutAlarmId": { "type": "integer", "minimum": 0, "description": "Line first-out alarm, 0 = none" }
+  },
+  "required": ["device", "state", "previousState", "stopReason", "blocked", "starved", "firstOutAlarmId"],
+  "additionalProperties": false,
+  "$defs": {
+    "packMLState": {
+      "enum": ["Undefined", "Clearing", "Stopped", "Starting", "Idle", "Suspended", "Execute",
+               "Stopping", "Aborting", "Aborted", "Holding", "Held", "Unholding", "Suspending",
+               "Unsuspending", "Resetting", "Completing", "Complete"]
+    }
+  }
+}

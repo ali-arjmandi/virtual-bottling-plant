@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "recipe-command.json",
+  "title": "RecipeCommand",
+  "description": "MES recipe download request. Ranges match plc-io.yaml recipe.request.",
+  "type": "object",
+  "allOf": [{ "$ref": "envelope.json" }],
+  "properties": {
+    "ts": true, "source": true, "schemaVersion": true, "messageId": true,
+    "workOrderNo": { "type": "string" },
+    "recipeId": { "type": "integer", "minimum": 1, "maximum": 32767 },
+    "recipeVersion": { "type": "integer", "minimum": 1, "maximum": 32767 },
+    "productCode": { "type": "integer", "minimum": 1, "maximum": 2 },
+    "brixTarget": { "type": "number", "minimum": 9.0, "maximum": 14.0 },
+    "brixTol": { "type": "number", "minimum": 0.1, "maximum": 1.0 },
+    "concRatio": { "type": "number", "minimum": 0.1, "maximum": 0.25 },
+    "fillTargetG": { "type": "number", "minimum": 995.0, "maximum": 1020.0 },
+    "lineSpeed": { "type": "integer", "minimum": 60, "maximum": 120 },
+    "capTorque": { "type": "number", "minimum": 1.5, "maximum": 3.0 }
+  },
+  "required": ["recipeId", "recipeVersion", "productCode", "brixTarget", "brixTol", "concRatio",
+               "fillTargetG", "lineSpeed", "capTorque"],
+  "additionalProperties": false
+}

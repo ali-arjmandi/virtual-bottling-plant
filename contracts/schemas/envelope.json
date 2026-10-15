@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "envelope.json",
+  "title": "Envelope",
+  "description": "Fields every UNS JSON message carries (contracts.md §3).",
+  "type": "object",
+  "properties": {
+    "ts": { "type": "string", "format": "date-time", "description": "ISO 8601 UTC, sim time" },
+    "source": { "type": "string", "minLength": 1, "description": "Publishing client, e.g. edge-bridge" },
+    "schemaVersion": { "type": "string", "pattern": "^1\\.[0-9]+$" },
+    "messageId": { "type": "string", "format": "uuid", "description": "Idempotency key" }
+  },
+  "required": ["ts", "source", "schemaVersion", "messageId"]
+}

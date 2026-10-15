@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "batch-event.json",
+  "title": "BatchEvent",
+  "description": "T-101 batch start (fill begins) or end (tank empty after transfer).",
+  "type": "object",
+  "allOf": [{ "$ref": "envelope.json" }],
+  "properties": {
+    "ts": true, "source": true, "schemaVersion": true, "messageId": true,
+    "event": { "enum": ["start", "end"] },
+    "batchNo": { "type": "integer", "minimum": 0 },
+    "productCode": { "type": "integer", "description": "1 orange, 2 apple" },
+    "concentrateLotNo": { "type": "integer", "minimum": 0 },
+    "brix": { "type": ["number", "null"], "description": "Latched batch Brix (end only)" },
+    "brixOk": { "type": ["boolean", "null"], "description": "Within recipe tolerance (end only)" }
+  },
+  "required": ["event", "batchNo", "productCode", "concentrateLotNo", "brix", "brixOk"],
+  "additionalProperties": false
+}

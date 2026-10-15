@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "divert-event.json",
+  "title": "DivertEvent",
+  "description": "P-201 divert valve opened (start) or closed (end).",
+  "type": "object",
+  "allOf": [{ "$ref": "envelope.json" }],
+  "properties": {
+    "ts": true, "source": true, "schemaVersion": true, "messageId": true,
+    "event": { "enum": ["start", "end"] },
+    "divertCount": { "type": "integer", "minimum": 0 },
+    "outTempC": { "type": "number" },
+    "batchNo": { "type": "integer", "minimum": 0, "description": "T-101 batch at the time" }
+  },
+  "required": ["event", "divertCount", "outTempC", "batchNo"],
+  "additionalProperties": false
+}

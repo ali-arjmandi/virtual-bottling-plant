@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "workorder-event.json",
+  "title": "WorkOrderEvent",
+  "description": "Work order lifecycle on Line 1 (retained, published by MES).",
+  "type": "object",
+  "allOf": [{ "$ref": "envelope.json" }],
+  "properties": {
+    "ts": true, "source": true, "schemaVersion": true, "messageId": true,
+    "orderNo": { "type": "string" },
+    "event": { "enum": ["released", "started", "completed", "aborted"] },
+    "productCode": { "type": "integer" },
+    "quantity": { "type": "integer", "minimum": 0 },
+    "recipeId": { "type": ["integer", "null"] },
+    "recipeVersion": { "type": ["integer", "null"] }
+  },
+  "required": ["orderNo", "event", "productCode", "quantity", "recipeId", "recipeVersion"],
+  "additionalProperties": false
+}
