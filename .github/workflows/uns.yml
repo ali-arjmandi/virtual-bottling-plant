@@ -1,0 +1,55 @@
+name: uns
+
+on:
+  push:
+    paths: ["packages/**", "services/**", "tests/uns/**", "contracts/**", "infra/**", "plc/**",
+            "sim/**", "package.json", "pnpm-lock.yaml", "docker-compose*.yml",
+            ".github/workflows/uns.yml"]
+  pull_request:
+    paths: ["packages/**", "services/**", "tests/uns/**", "contracts/**", "infra/**", "plc/**",
+            "sim/**", "package.json", "pnpm-lock.yaml", "docker-compose*.yml",
+            ".github/workflows/uns.yml"]
+  workflow_dispatch:
+
+jobs:
+  typescript:
+    name: contracts, lint, typecheck, unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Generated contracts are up to date
+        run: pnpm gen:contracts && git diff --exit-code
+      - run: pnpm lint
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  uns:
+    name: UNS acceptance (sim + PLC + broker + edge bridge in Docker)
+    needs: typescript
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: cp .env.example .env
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @vbp/contracts build
+      - name: Build and start the stack (dev ports, docker-compose.override.yml)
+        run: docker compose up -d --build --wait sim plc broker edge-bridge
+      - run: pnpm --filter tests-uns test
+      - run: pnpm --filter tests-uns test:link-loss
+      - if: failure()
+        run: docker compose logs --tail 300
+      - if: always()
+        run: docker compose down
