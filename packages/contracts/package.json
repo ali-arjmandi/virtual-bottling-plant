@@ -1,0 +1,32 @@
+{
+  "name": "@vbp/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TS types, decoders and validators generated from /contracts (contracts.md §6).",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "gen": "tsx scripts/gen.ts && tsx scripts/gen-acl.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "ajv": "^8",
+    "ajv-formats": "^3"
+  },
+  "devDependencies": {
+    "json-schema-to-typescript": "^15",
+    "yaml": "^2"
+  }
+}
