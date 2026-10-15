@@ -1,0 +1,26 @@
+{
+  "name": "virtual-bottling-plant",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "gen:contracts": "pnpm --filter @vbp/contracts gen",
+    "build": "pnpm -r build",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r --filter '!tests-uns' test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "@types/node": "^22",
+    "eslint": "^9",
+    "prettier": "^3",
+    "tsx": "^4",
+    "typescript": "~5.8",
+    "typescript-eslint": "^8",
+    "vitest": "^3"
+  }
+}

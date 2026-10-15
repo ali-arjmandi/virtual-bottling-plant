@@ -1,0 +1,6 @@
+**/generated/
+pnpm-lock.yaml
+contracts/
+docs/
+sim/
+plc/
