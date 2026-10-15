@@ -1,6 +1,6 @@
 # Edge Bridge and Unified Namespace
 
-Part of the [PRD](../prd.md). Folders: `services/edge-bridge/` (TypeScript, modbus-serial, Sparkplug B client) and `infra/broker/` (EMQX).
+Part of the [PRD](../prd.md). Folders: `services/edge-bridge/` (TypeScript, modbus-serial, mqtt, sparkplug-payload) and `infra/broker/` (EMQX 5.8). Decisions: [ADR 0001 UNS-first](../adr/0001-uns-first.md), [ADR 0006 Sparkplug + JSON](../adr/0006-sparkplug-telemetry-json-events.md). Status: **built in Phase 3**.
 
 ## Purpose
 
@@ -32,38 +32,49 @@ The bridge is the only conduit between the control zone (L1) and everything abov
 
 | ID | Requirement |
 | --- | --- |
-| UNS-01 | EMQX with TLS on 8883. Plain 1883 disabled outside dev |
-| UNS-02 | One user per client with ACL from [contracts.md §3](contracts.md) |
+| UNS-01 | EMQX with TLS on 8883. Plain 1883 disabled outside dev. A one-shot `certs` service makes a local dev CA (`infra/certs/gen-certs.sh`) |
+| UNS-02 | One user per client (passwords from `.env`) with ACL from [contracts.md §3](contracts.md), generated into `infra/broker/acl.conf` |
 | UNS-03 | Topic tree and metric names come from `contracts/uns/topics.yaml` |
 
 ## Folder structure
 
 ```
+packages/contracts/              # generated from /contracts: pnpm gen:contracts
+├── scripts/gen.ts, gen-acl.ts   # TS types, contract constants, infra/broker/acl.conf
+└── src/
+    ├── metric-catalog.ts        # every Sparkplug metric and the PLC word behind it
+    ├── uns-topics.ts, validators.ts
+    └── generated/               # never edited by hand
+
 services/edge-bridge/
-├── Dockerfile
+├── Dockerfile                   # build context: repo root
 └── src/
     ├── main.ts                  # wiring only
     ├── config/env.ts            # validated env
+    ├── bridge/line-bridge.ts    # one poll cycle: read, publish, events, handshake
     ├── modbus/
-    │   ├── plc-client.ts        # connection + reconnect
-    │   ├── block-reader.ts      # polls blocks, decodes with the map
-    │   └── write-queue.ts
+    │   ├── plc-client.ts        # connection, reconnect, timeouts
+    │   ├── write-queue.ts       # one queue for every Modbus transaction
+    │   ├── read-plan.ts         # which %MW spans / %MD counters a poll reads
+    │   ├── block-reader.ts      # polls the blocks into a raw snapshot
+    │   └── value-decoder.ts     # signed, scaled, enum, alarm bits, 32-bit
     ├── sparkplug/
-    │   ├── node-session.ts      # BIRTH/DEATH, seq numbers
-    │   └── metric-publisher.ts  # report by exception
-    ├── events/
-    │   ├── state-change-detector.ts
-    │   └── event-publisher.ts
-    ├── commands/
-    │   ├── dcmd-handler.ts
-    │   └── recipe-handshake.ts
+    │   ├── node-session.ts      # BIRTH/DEATH, bdSeq, seq, NCMD/DCMD
+    │   ├── metric-publisher.ts  # report by exception
+    │   └── quality-tracker.ts   # stale / dead / bad quality
+    ├── time/sim-timestamp.ts    # sim clock → epoch ms (EDG-06)
+    ├── events/                  # state-change-detector, process-event-detector, event-publisher
+    ├── commands/                # dcmd-handler, recipe-handshake, recipe-words
     └── health/health-server.ts  # /health for compose
+
+infra/broker/                    # emqx.conf, start.sh (users from env), acl.conf (generated)
+tests/uns/                       # acceptance tests against the running stack (Vitest)
 ```
 
 ## Acceptance criteria
 
-- [ ] Ignition sees all Line 1 devices through its MQTT Engine without manual tag creation
-- [ ] Stopping the PLC container shows bad quality in Ignition within 1 s of the 3rd missed poll
-- [ ] A recipe download round trip (MES → PLC → result) takes < 2 s
-- [ ] Unit tests cover decoding (scaling, 32-bit words), deadband and the handshake state machine
-- [ ] Broker refuses a `mes-api` attempt to publish `DCMD`
+- [ ] Ignition sees all Line 1 devices through its MQTT Engine without manual tag creation (Phase 4; births with every contract metric are checked in `tests/uns/specs/sparkplug.spec.ts`)
+- [x] Stopping the PLC container gives `DDEATH` for every device within 1 s of the 3rd missed poll (`link-loss.spec.ts`)
+- [x] A recipe download round trip (MES → PLC → result) takes < 2 s (~0.1–0.3 s measured)
+- [x] Unit tests cover decoding (scaling, 32-bit words), deadband and the handshake state machine
+- [x] Broker refuses a `mes-api` attempt to publish `DCMD` (`acl.spec.ts`)

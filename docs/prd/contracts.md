@@ -49,11 +49,11 @@ The PLC's built-in Modbus server is read and written only by the edge bridge. Lo
 | --- | --- | --- |
 | 1 | Bridge | Writes recipe values, `RecipeId`, `RecipeVersion` |
 | 2 | Bridge | Sets `Recipe_Req = 1` |
-| 3 | PLC | Checks ranges and that the line (F-401) is Stopped, Idle, Aborted or Complete. Sets `Recipe_Ack = 1` or `Recipe_Nak = <code>` (1 in Execute, 2 Brix, 3 concentrate ratio, 4 fill weight, 5 line speed, 6 cap torque, 7 unknown product) |
+| 3 | PLC | Checks ranges and that the line (F-401) is Stopped, Idle, Aborted or Complete. Sets `Recipe_Ack = 1` or `Recipe_Nak = <code>` (1 in Execute, i.e. any other state, 2 Brix, 3 concentrate ratio, 4 fill weight, 5 line speed, 6 cap torque, 7 unknown product, 8 busy) |
 | 4 | Bridge | Publishes the result to the UNS, clears `Recipe_Req` |
 | 5 | PLC | Clears Ack/Nak when Req goes to 0 |
 
-Timeout: 10 s without Ack/Nak counts as a failure.
+Timeout: 10 s without Ack/Nak counts as a failure. The bridge writes all recipe values in one request (FC16) and runs one handshake at a time; a second download during one gets Nak 8 (`Busy`) without reaching the PLC.
 
 ### Command handshake
 
@@ -70,10 +70,19 @@ Two kinds of traffic on one broker:
 
 ### Sparkplug B
 
-- Group ID `DelftsSap`, edge node `Line1`, one device per equipment: `T101`, `P201`, `T301`, `F401`, `C501`, `L601`, `Q701`, `K801`, `CV`.
-- Metric names follow the tag names in `plc-io.yaml` (`TT202_OutTemp`, `State`, `GoodCount`).
-- Commands from Ignition come as `DCMD` (`Cmd_Start`, `Cmd_Stop`, `StopReason`, `AlarmAck`).
-- When the PLC link is lost, the bridge publishes `DDEATH`, or marks metrics as stale. Ignition shows bad quality.
+- Group ID `DelftsSap`, edge node `Line1`, one device per equipment: `T101`, `P201`, `T301`, `F401`, `C501`, `L601`, `Q701`, `K801`, and `LINE` (line state, alarm summary, conveyor fills, active recipe, sim clock; the `LINE` block of `plc-io.yaml`).
+- Metrics are derived from `plc-io.yaml` with the rules in `topics.yaml`, never listed by hand:
+
+| PLC data | Sparkplug metric | Type |
+| --- | --- | --- |
+| Status word | same name (`TT202_OutTemp`, `State`) | `Double` if scaled, `Int32` (enums as their PackML number), `Boolean` |
+| Q-701 nozzle subgroup | `Nozzles/N01/Seq`, `…/Mean`, `…/Range` | `Int32`, `Double` |
+| Alarm table word | `Alarms/C501_Jam/Active`, `Acked`, `FirstOut` + `Priority`, on the alarm's device | `Boolean`, `Int32` |
+| Counter | device prefix removed (`F401_Count` → `F401` `Count`); `SIM_TimeMs` → `LINE` `SimTimeMs` | `UInt32` |
+
+- Commands from Ignition come as `DCMD` on metrics listed in `topics.yaml`: `Cmd_Start`, `Cmd_Stop`, `Cmd_Reset` (Boolean, momentary: writing `true` sends the command once) on F401–K801 and LINE; `StopReason` (100–32767) on F401–K801; `AlarmAck` (alarm id or −1 = all) on LINE. `StopReason` is both read (status) and written (command). Ignition's `NCMD` `Node Control/Rebirth` re-sends every birth.
+- Every metric carries a `Quality` property: 192 good, 0 bad (the device's remote I/O is lost, `CommsOk = false`: its measurements only), 500 stale (a missed PLC poll). After 3 missed polls, or a frozen `PlcHeartbeat`, the bridge publishes `DDEATH` for every device and re-births on recovery.
+- Timestamps are sim time: `SIM_EPOCH` (wall time of sim t = 0, matching `sim/config/line.yaml`) + `SimTimeMs`, unwrapped past 2³² ms. A sim reset re-births.
 
 ### JSON topic tree (ISA-95)
 
@@ -81,7 +90,7 @@ Two kinds of traffic on one broker:
 
 | Topic | Publisher | Retained | Payload |
 | --- | --- | --- | --- |
-| `…/packaging/line1/{cell}/state` | bridge | yes | PackML state changes |
+| `…/packaging/line1/{cell}/state` | bridge | yes | PackML state changes; `cell` = `filler`, `capper`, `labeler`, `checkweigher`, `casepacker`, `line` |
 | `…/process/line1/mixer/batch` | bridge | no | Batch start/end, concentrate lot, Brix |
 | `…/process/line1/pasteurizer/divert` | bridge | no | Divert start/end |
 | `…/packaging/line1/events/workorder` | MES | yes | Work order released/started/completed |
@@ -89,15 +98,17 @@ Two kinds of traffic on one broker:
 | `…/packaging/line1/cmd/recipe` | MES | no | Recipe download request |
 | `…/packaging/line1/cmd/recipe/result` | bridge | no | Ack/Nak + reason |
 
-Every JSON message has: `ts` (ISO 8601 UTC, sim time), `source`, `schemaVersion` and a `messageId` (UUID) used for idempotency.
+Every JSON message has: `ts` (ISO 8601 UTC, sim time), `source`, `schemaVersion` (`1.x`) and a `messageId` (UUID) used for idempotency. Schemas reject unknown fields. A recipe result echoes the command's `messageId` as `requestId`; its `result` is `Ack`, `Nak` (with `nakCode`), `Timeout` or `Invalid` (failed the schema, never sent to the PLC). State events are republished after a rebirth with `previousState` = `state`.
 
 ### ACL
 
 | Client | Publish | Subscribe |
 | --- | --- | --- |
-| `edge-bridge` | `spBv1.0/DelftsSap/+/Line1/#`, state/batch/divert, `cmd/recipe/result` | `DCMD`, `cmd/recipe` |
-| `ignition` | `DCMD` | everything read-only |
-| `mes-api` | `events/#`, `cmd/recipe` | everything read-only |
+| `edge-bridge` | `NBIRTH`, `NDEATH`, `NDATA`, `DBIRTH`, `DDEATH`, `DDATA`, state/batch/divert, `cmd/recipe/result` | `NCMD`, `DCMD`, `STATE`, `cmd/recipe` |
+| `ignition` | `NCMD` (rebirth), `DCMD`, `STATE` (primary host) | everything read-only |
+| `mes-api` | `events/workorder`, `events/lot`, `cmd/recipe` | everything read-only |
+
+The broker's `infra/broker/acl.conf` is generated from this table in `topics.yaml`; anything not allowed is denied.
 
 ## 4. Simulator API (REST + WebSocket, L0 only)
 

@@ -121,7 +121,7 @@ About 10 weeks at 15 to 20 h/week. Each phase ends with something you can demo.
 | --- | --- | --- | --- |
 | P1 Simulator | 1–2 | `sim/`, Modbus server, fault API | 24 h headless run, line behaviour plausible (**done**) |
 | P2 PLC | 3–4 | `plc/`, PackML, PID, alarms, FAT suite | FAT green; line runs under PLC control (**done**) |
-| P3 UNS | 5 | Edge bridge, broker, contracts | Sparkplug data visible in an MQTT client |
+| P3 UNS | 5 | Edge bridge, broker, contracts | Sparkplug data visible in an MQTT client (**built**, see [l2-edge-uns.md](prd/l2-edge-uns.md)) |
 | P4 SCADA/HMI | 6 | Ignition UDTs, 5 screens, historian | **Apply for PLC/HMI/SCADA roles** |
 | P5 MES + ERP | 7–9 | Work orders, recipe, OEE, downtime, genealogy, quality | Full demo runs; **apply for MES roles** |
 | P6 Polish | 10 | Instructor Station demo mode, README, video, optional AI | Release criteria in §9 met |
@@ -135,4 +135,4 @@ About 10 weeks at 15 to 20 h/week. Each phase ends with something you can demo.
 | R3 | Ignition Maker Edition limits (non-commercial, no Vision) | Use Perspective only. Document the licence in the README |
 | R4 | OpenPLC Runtime accepts one `.st` file | Resolved in P2: modular sources concatenated by `plc/scripts/build.sh`; register maps generated from the contracts ([ADR 0005](adr/0005-openplc-portable-st.md)) |
 | R5 | Scope creep in MES | MES modules in priority order; AI is the last phase and optional |
-| Q1 | EMQX or HiveMQ CE? | Default EMQX (built-in ACL and dashboard). Revisit in P3 |
+| Q1 | EMQX or HiveMQ CE? | Resolved in P3: EMQX 5.8 (built-in user DB, file ACL, dashboard; [ADR 0001](adr/0001-uns-first.md)) |
