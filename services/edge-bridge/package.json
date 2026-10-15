@@ -1,0 +1,25 @@
+{
+  "name": "@vbp/edge-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "L1/L2 conduit: PLC (Modbus TCP) ↔ UNS (Sparkplug B + JSON over MQTT).",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@vbp/contracts": "workspace:^",
+    "modbus-serial": "^8",
+    "mqtt": "^5",
+    "pino": "^9",
+    "sparkplug-payload": "^1",
+    "zod": "^3"
+  }
+}

@@ -6,3 +6,6 @@
 **/out
 .git
 **/build
+**/node_modules
+**/dist
+.env
