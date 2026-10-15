@@ -1,5 +1,5 @@
 # Dev only (loaded automatically by `docker compose up`): publishes the sim API and Modbus port
-# and the PLC's Modbus server and web UI on localhost (the FAT suite in tests/fat uses these).
+# the PLC's Modbus server and web UI, and the broker on localhost (tests/fat and tests/uns use these).
 # Zone-faithful run: docker compose -f docker-compose.yml up
 services:
   sim:
@@ -10,7 +10,16 @@ services:
     ports:
       - "127.0.0.1:5502:502"   # PLC Modbus server (%MW/%MD), as the edge bridge sees it
       - "127.0.0.1:8080:8080"  # OpenPLC web UI, monitoring only (login openplc / openplc)
+  broker:
+    environment:
+      EMQX_LISTENERS__TCP__DEFAULT__ENABLE: "true"   # plain MQTT, dev only (UNS-01)
+    ports:
+      - "127.0.0.1:1883:1883"
+      - "127.0.0.1:8883:8883"
+      - "127.0.0.1:18083:18083"  # EMQX dashboard (admin / EMQX_DASHBOARD_PASSWORD)
 
 networks:
   net-l1-control:
     internal: false    # dev only: a container on internal networks alone cannot publish ports
+  net-l2-supervisory:
+    internal: false    # dev only, as above (broker ports)

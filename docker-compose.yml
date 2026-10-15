@@ -1,5 +1,5 @@
 # Virtual Bottling Plant. One Docker network per Purdue zone (docs/prd/architecture.md §1).
-# Phase 2: L0 simulator + L1 soft-PLC. Later phases add edge-bridge, broker, ignition, mes, erp.
+# Phase 3: L0 simulator, L1 soft-PLC, L1/L2 edge bridge + UNS broker. Later: ignition, mes, erp.
 name: virtual-bottling-plant
 
 services:
@@ -31,9 +31,73 @@ services:
       - sim
     restart: unless-stopped
 
+  certs:   # one-shot: local CA + broker certificate for MQTT over TLS (dev PKI)
+    image: alpine/openssl:3.5.4
+    entrypoint: ["/bin/sh", "/scripts/gen-certs.sh", "/certs"]
+    volumes:
+      - ./infra/certs/gen-certs.sh:/scripts/gen-certs.sh:ro
+      - ./infra/certs/out:/certs
+    network_mode: none
+    restart: "no"
+
+  broker:
+    image: emqx/emqx:5.8.8
+    entrypoint: ["/opt/emqx/etc/vbp-start.sh"]
+    environment:
+      EMQX_NODE_COOKIE: ${EMQX_NODE_COOKIE:?set in .env}
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD:?set in .env}
+      MQTT_EDGE_BRIDGE_PASSWORD: ${MQTT_EDGE_BRIDGE_PASSWORD:?set in .env}
+      MQTT_IGNITION_PASSWORD: ${MQTT_IGNITION_PASSWORD:?set in .env}
+      MQTT_MES_API_PASSWORD: ${MQTT_MES_API_PASSWORD:?set in .env}
+    volumes:
+      - ./infra/broker/start.sh:/opt/emqx/etc/vbp-start.sh:ro
+      - ./infra/broker/emqx.conf:/opt/emqx/etc/emqx.conf:ro
+      - ./infra/broker/acl.conf:/opt/emqx/etc/acl.conf:ro
+      - ./infra/certs/out:/opt/emqx/etc/certs/vbp:ro
+    networks:
+      - net-l2-supervisory   # edge bridge, Ignition
+      - net-l3-operations    # MES
+    depends_on:
+      certs:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  edge-bridge:
+    build:
+      context: .
+      dockerfile: services/edge-bridge/Dockerfile
+    environment:
+      PLC_HOST: plc
+      PLC_PORT: 502
+      BRIDGE_POLL_MS: ${BRIDGE_POLL_MS:-250}
+      MQTT_URL: mqtts://broker:8883
+      MQTT_USERNAME: edge-bridge
+      MQTT_PASSWORD: ${MQTT_EDGE_BRIDGE_PASSWORD:?set in .env}
+      MQTT_CA_FILE: /certs/ca.crt
+      SIM_EPOCH: ${SIM_EPOCH:-2026-10-05T05:30:00Z}
+    volumes:
+      - ./infra/certs/out/ca.crt:/certs/ca.crt:ro
+    networks:
+      - net-l1-control       # Modbus TCP client of the PLC (its only client)
+      - net-l2-supervisory   # MQTT to the broker
+    depends_on:
+      plc:
+        condition: service_started
+      broker:
+        condition: service_healthy
+    restart: unless-stopped
+
 networks:
   net-l0-field:
     internal: true
   net-l0-instructor:
   net-l1-control:
     internal: true
+  net-l2-supervisory:
+    internal: true
+  net-l3-operations:
