@@ -5,7 +5,7 @@ simulator stands in for the machines, an OpenPLC soft-PLC runs IEC 61131-3 Struc
 PackML state machines, Ignition provides an ISA-101 HMI, and a TypeScript MES handles work orders,
 recipes, OEE and lot genealogy over an MQTT Unified Namespace with Sparkplug B.
 
-> **Status: Phase 3 of 6 (L0 simulator, L1 PLC, L1/L2 edge bridge + Unified Namespace).** See [docs/prd.md](docs/prd.md) for the plan.
+> **Status: Phase 3 of 6 done (L0 simulator, L1 PLC, L1/L2 edge bridge + Unified Namespace); Phase 4 (Ignition HMI) in progress.** See [docs/prd.md](docs/prd.md) for the plan.
 
 ## What runs today
 
@@ -22,7 +22,7 @@ docker compose up --build          # sim :8000, PLC Modbus :5502, OpenPLC UI :80
 curl -X POST 127.0.0.1:8000/faults -H 'content-type: application/json' \
      -d '{"machine":"C501","type":"jam","durationS":30}'      # capper Held, filler blocked...
 pip install -r tests/fat/requirements.txt && python -m pytest tests/fat -v   # PLC FAT suite
-corepack enable && pnpm install && pnpm build && pnpm test  # contracts + bridge unit tests
+corepack enable && pnpm install && pnpm build && pnpm test  # contracts, bridge, tag unit tests
 pnpm --filter tests-uns test       # UNS acceptance tests against the running stack
 ```
 
@@ -32,6 +32,28 @@ the CA above, user `ignition` and `MQTT_IGNITION_PASSWORD` from `.env`, and subs
 
 `docker compose -f docker-compose.yml up` runs without the dev port mappings, closer to the
 Purdue zoning in [docs/prd/architecture.md](docs/prd/architecture.md).
+
+## SCADA / HMI (Phase 4, in progress)
+
+Ignition 8.3 Perspective, fed only from the UNS through Cirrus Link MQTT Engine (no PLC driver,
+[ADR 0001](docs/adr/0001-uns-first.md)). Built so far:
+
+- **Tags generated from the contract:** `pnpm gen:scada` writes one UDT per equipment type and
+  the Line 1 instances (ISA-95 folders `Delft/Process|Packaging/Line1/…`) into
+  [scada/tags/](scada/tags/) from the same metric catalog the edge bridge uses, so the HMI can
+  never drift from the PLC map. Members reference the MQTT Engine tags (quality passes
+  through); PLC alarms carry their priority, and an ack in Ignition acknowledges the alarm in
+  the PLC.
+- **Stop reasons:** [scada/reason-tree.json](scada/reason-tree.json), codes ≥ 100 by OEE loss
+  category, shared by the HMI stop-reason popup and the MES.
+
+Next: MQTT Engine connection, generated Perspective views (ISA-101 style), historian and alarm
+journal on `scada-db`, and the gateway as a `docker compose` service (Ignition 8.3.10).
+Development currently runs against a local Ignition gateway at `localhost:8088`, which reaches
+the broker on `mqtts://localhost:8883`. Licensing uses the free
+[Maker Edition](https://inductiveautomation.com/ignition/maker-edition) (non-commercial); its
+key and activation token go in `.env` (`IGNITION_LICENSE_KEY`, `IGNITION_ACTIVATION_TOKEN`) and
+are never committed.
 
 ## Repo map
 
@@ -45,7 +67,7 @@ Purdue zoning in [docs/prd/architecture.md](docs/prd/architecture.md).
 | [services/edge-bridge/](services/edge-bridge/) | Modbus ↔ MQTT / Sparkplug B (L1/L2 conduit) | done |
 | [infra/broker/](infra/broker/) | EMQX UNS broker, TLS, ACL | done |
 | [tests/uns/](tests/uns/) | UNS acceptance tests | done |
-| `scada/` | Ignition Perspective HMI | Phase 4 |
+| [scada/](scada/) | Ignition Perspective HMI: generated tags, reason tree | Phase 4, in progress |
 | `services/mes-api/`, `apps/mes-web/` | MES | Phase 5 |
 | [docs/](docs/) | PRD, ADRs | |
 
