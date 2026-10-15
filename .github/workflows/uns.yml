@@ -24,7 +24,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Generated contracts and SCADA tags are up to date
-        run: pnpm gen:contracts && pnpm gen:scada && git diff --exit-code
+        run: pnpm gen:contracts && pnpm --filter @vbp/contracts build && pnpm gen:scada && git diff --exit-code
       - run: pnpm lint
       - run: pnpm build
       - run: pnpm typecheck
